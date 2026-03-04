@@ -352,8 +352,6 @@ function skipToNext() {
     saveExercises();
 }
 
-
-
 function resetWorkout() {
     pauseTimer();
     localStorage.removeItem('f45-workout');
