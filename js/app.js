@@ -298,11 +298,17 @@ function completeWorkout() {
 }
 
 function skipToNext() {
+    // Always pause first
+    if (state.intervalId) {
+        clearInterval(state.intervalId);
+        state.intervalId = null;
+    }
+    
     if (state.phase === 'rest') {
-        // Skip from rest to next exercise
+        // SKIP FROM REST: Go to next exercise (work)
         state.currentExercise++;
         
-        // Check if set is complete
+        // Check if set complete
         if (state.currentExercise >= state.exercises.length) {
             state.currentExercise = 0;
             state.currentSet++;
@@ -314,35 +320,37 @@ function skipToNext() {
             updateSetIndicator();
         }
         
-        // Move to work phase
+        // Set work phase with 40s
         state.phase = 'work';
         state.timeRemaining = WORKOUT_CONFIG.workTime;
         
+        // Restart timer if was running
         if (state.isRunning) {
-            pauseTimer();
             startTimer();
         }
         
         renderExercise();
         renderUpNext();
         renderAllExercises();
+        
     } else {
-        // Skip from work to rest
+        // SKIP FROM WORK: Go to rest
         state.phase = 'rest';
         
-        // Calculate rest time
+        // Determine rest time
         if (state.currentExercise >= state.exercises.length - 1) {
+            // Last exercise of set
             if ((state.currentSet + 1) % 2 === 0 && state.currentSet < WORKOUT_CONFIG.sets - 1) {
-                state.timeRemaining = WORKOUT_CONFIG.restBetweenSets;
+                state.timeRemaining = WORKOUT_CONFIG.restBetweenSets; // 2 min
             } else {
-                state.timeRemaining = WORKOUT_CONFIG.restTime;
+                state.timeRemaining = WORKOUT_CONFIG.restTime; // 20s
             }
         } else {
-            state.timeRemaining = WORKOUT_CONFIG.restTime;
+            state.timeRemaining = WORKOUT_CONFIG.restTime; // 20s
         }
         
+        // Restart timer if was running
         if (state.isRunning) {
-            pauseTimer();
             startTimer();
         }
     }
