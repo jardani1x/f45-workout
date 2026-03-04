@@ -298,22 +298,53 @@ function completeWorkout() {
 }
 
 function skipToNext() {
-    // Skip to rest phase
-    state.phase = 'rest';
-    // Calculate rest time based on position
-    if (state.currentExercise >= state.exercises.length - 1) {
-        if ((state.currentSet + 1) % 2 === 0 && state.currentSet < WORKOUT_CONFIG.sets - 1) {
-            state.timeRemaining = WORKOUT_CONFIG.restBetweenSets;
+    if (state.phase === 'rest') {
+        // Skip from rest to next exercise
+        state.currentExercise++;
+        
+        // Check if set is complete
+        if (state.currentExercise >= state.exercises.length) {
+            state.currentExercise = 0;
+            state.currentSet++;
+            
+            if (state.currentSet >= WORKOUT_CONFIG.sets) {
+                completeWorkout();
+                return;
+            }
+            updateSetIndicator();
+        }
+        
+        // Move to work phase
+        state.phase = 'work';
+        state.timeRemaining = WORKOUT_CONFIG.workTime;
+        
+        if (state.isRunning) {
+            pauseTimer();
+            startTimer();
+        }
+        
+        renderExercise();
+        renderUpNext();
+        renderAllExercises();
+    } else {
+        // Skip from work to rest
+        state.phase = 'rest';
+        
+        // Calculate rest time
+        if (state.currentExercise >= state.exercises.length - 1) {
+            if ((state.currentSet + 1) % 2 === 0 && state.currentSet < WORKOUT_CONFIG.sets - 1) {
+                state.timeRemaining = WORKOUT_CONFIG.restBetweenSets;
+            } else {
+                state.timeRemaining = WORKOUT_CONFIG.restTime;
+            }
         } else {
             state.timeRemaining = WORKOUT_CONFIG.restTime;
         }
-    } else {
-        state.timeRemaining = WORKOUT_CONFIG.restTime;
-    }
-    
-    if (state.isRunning) {
-        pauseTimer();
-        startTimer();
+        
+        if (state.isRunning) {
+            pauseTimer();
+            startTimer();
+        }
     }
     
     updatePhaseDisplay();
