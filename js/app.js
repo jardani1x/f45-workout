@@ -298,24 +298,30 @@ function completeWorkout() {
 }
 
 function skipToNext() {
-    if (state.currentExercise < state.exercises.length - 1) {
-        state.currentExercise++;
-        state.phase = 'work';
-        state.timeRemaining = WORKOUT_CONFIG.workTime;
-        
-        if (state.isRunning) {
-            pauseTimer();
-            startTimer();
+    // Skip to rest phase
+    state.phase = 'rest';
+    // Calculate rest time based on position
+    if (state.currentExercise >= state.exercises.length - 1) {
+        if ((state.currentSet + 1) % 2 === 0 && state.currentSet < WORKOUT_CONFIG.sets - 1) {
+            state.timeRemaining = WORKOUT_CONFIG.restBetweenSets;
+        } else {
+            state.timeRemaining = WORKOUT_CONFIG.restTime;
         }
-        
-        renderExercise();
-        renderUpNext();
-        renderAllExercises();
-        updatePhaseDisplay();
-        updateTimerDisplay();
-        saveExercises();
+    } else {
+        state.timeRemaining = WORKOUT_CONFIG.restTime;
     }
+    
+    if (state.isRunning) {
+        pauseTimer();
+        startTimer();
+    }
+    
+    updatePhaseDisplay();
+    updateTimerDisplay();
+    saveExercises();
 }
+
+
 
 function resetWorkout() {
     pauseTimer();
