@@ -1,6 +1,7 @@
-// F45 Workout Timer - Loads exercises from JSON
+// F45 Workout Timer - F45 Style
 
-const WORKOUT_CONFIG = {
+// Config - will be updated from inputs
+let WORKOUT_CONFIG = {
     workTime: 40,
     restTime: 20,
     sets: 4,
@@ -31,21 +32,32 @@ async function loadExercises() {
     }
 }
 
-function selectRandomExercises(count) {
+// Select exercises with rotation - different for Sets 1-2 vs 3-4
+function selectRandomExercises(count, setNumber) {
     if (!state.exerciseLibrary) return [];
     
-    const categories = Object.keys(state.exerciseLibrary);
+    // Different rotation for Set 1-2 vs Set 3-4
+    const rotations = {
+        0: ['push', 'pull', 'hinge', 'squat'],      // Set 1
+        1: ['pull', 'hinge', 'squat', 'push'],      // Set 2
+        2: ['squat', 'push', 'pull', 'hinge'],      // Set 3
+        3: ['hinge', 'squat', 'push', 'pull']       // Set 4
+    };
+    
+    const rotation = rotations[setNumber] || rotations[0];
     const selected = [];
     
-    while (selected.length < count) {
-        const category = categories[Math.floor(Math.random() * categories.length)];
+    for (let i = 0; i < count; i++) {
+        const category = rotation[i % 4];
         const exercises = state.exerciseLibrary[category];
-        const exercise = exercises[Math.floor(Math.random() * exercises.length)];
+        if (!exercises || exercises.length === 0) continue;
         
+        const exercise = exercises[Math.floor(Math.random() * exercises.length)];
         if (exercise && !selected.find(e => e.name === exercise.name)) {
             selected.push(exercise);
         }
     }
+    
     return selected;
 }
 
@@ -64,7 +76,7 @@ const setIndicator = document.querySelector('.set-indicator');
 const nextBtn = document.getElementById('nextBtn');
 const allExerciseList = document.querySelector('.all-exercise-list');
 
-// LocalStorage functions
+// LocalStorage
 function saveExercises() {
     const data = {
         exercises: state.exercises,
@@ -89,19 +101,29 @@ function loadSavedExercises() {
 async function init() {
     await loadExercises();
     
+    // Read work/rest from inputs
+    const workInput = document.getElementById('workTime');
+    const restInput = document.getElementById('restTime');
+    if (workInput && workInput.value) WORKOUT_CONFIG.workTime = parseInt(workInput.value) || 40;
+    if (restInput && restInput.value) WORKOUT_CONFIG.restTime = parseInt(restInput.value) || 20;
+    
+    state.timeRemaining = WORKOUT_CONFIG.countdown;
+    
     const saved = loadSavedExercises();
     if (saved && saved.exercises) {
         state.exercises = saved.exercises;
         state.currentExercise = saved.currentExercise;
         state.currentSet = saved.currentSet;
     } else {
-        state.exercises = selectRandomExercises(WORKOUT_CONFIG.exercisesPerSet);
+        // Generate fresh exercises for all 4 sets (12 total)
+        state.exercises = selectRandomExercises(WORKOUT_CONFIG.exercisesPerSet, state.currentSet);
     }
     
     renderExercise();
     renderUpNext();
     renderAllExercises();
     updateSetIndicator();
+    updateTimerDisplay();
     
     startBtn.addEventListener('click', toggleTimer);
     resetBtn.addEventListener('click', resetWorkout);
@@ -188,7 +210,7 @@ function updateTimerDisplay() {
     if (state.phase === 'countdown') total = WORKOUT_CONFIG.countdown;
     else if (state.phase === 'work') total = WORKOUT_CONFIG.workTime;
     else if (state.phase === 'rest') {
-        total = state.currentExercise >= state.exercises.length - 1 && (state.currentSet + 1) % 2 === 0 
+        total = state.currentExercise >= state.exercises.length - 1 && (state.currentSet + 1) % 2 === 0 && state.currentSet < WORKOUT_CONFIG.sets - 1 
             ? WORKOUT_CONFIG.restBetweenSets : WORKOUT_CONFIG.restTime;
     }
     
@@ -257,6 +279,8 @@ function handlePhaseChange() {
                 return;
             }
             
+            // Generate new exercises for new set
+            state.exercises = selectRandomExercises(WORKOUT_CONFIG.exercisesPerSet, state.currentSet);
             updateSetIndicator();
         }
         
@@ -298,17 +322,16 @@ function completeWorkout() {
 }
 
 function skipToNext() {
-    // Always pause first
+    // Clear interval first
     if (state.intervalId) {
         clearInterval(state.intervalId);
         state.intervalId = null;
     }
     
     if (state.phase === 'rest') {
-        // SKIP FROM REST: Go to next exercise (work)
+        // Skip from rest to next exercise
         state.currentExercise++;
         
-        // Check if set complete
         if (state.currentExercise >= state.exercises.length) {
             state.currentExercise = 0;
             state.currentSet++;
@@ -317,42 +340,35 @@ function skipToNext() {
                 completeWorkout();
                 return;
             }
+            
+            state.exercises = selectRandomExercises(WORKOUT_CONFIG.exercisesPerSet, state.currentSet);
             updateSetIndicator();
         }
         
-        // Set work phase with 40s
         state.phase = 'work';
         state.timeRemaining = WORKOUT_CONFIG.workTime;
         
-        // Restart timer if was running
-        if (state.isRunning) {
-            startTimer();
-        }
+        if (state.isRunning) startTimer();
         
         renderExercise();
         renderUpNext();
         renderAllExercises();
         
     } else {
-        // SKIP FROM WORK: Go to rest
+        // Skip from work to rest
         state.phase = 'rest';
         
-        // Determine rest time
         if (state.currentExercise >= state.exercises.length - 1) {
-            // Last exercise of set
             if ((state.currentSet + 1) % 2 === 0 && state.currentSet < WORKOUT_CONFIG.sets - 1) {
-                state.timeRemaining = WORKOUT_CONFIG.restBetweenSets; // 2 min
+                state.timeRemaining = WORKOUT_CONFIG.restBetweenSets;
             } else {
-                state.timeRemaining = WORKOUT_CONFIG.restTime; // 20s
+                state.timeRemaining = WORKOUT_CONFIG.restTime;
             }
         } else {
-            state.timeRemaining = WORKOUT_CONFIG.restTime; // 20s
+            state.timeRemaining = WORKOUT_CONFIG.restTime;
         }
         
-        // Restart timer if was running
-        if (state.isRunning) {
-            startTimer();
-        }
+        if (state.isRunning) startTimer();
     }
     
     updatePhaseDisplay();
@@ -367,7 +383,7 @@ function resetWorkout() {
     state.currentExercise = 0;
     state.currentSet = 0;
     state.timeRemaining = WORKOUT_CONFIG.countdown;
-    state.exercises = selectRandomExercises(WORKOUT_CONFIG.exercisesPerSet);
+    state.exercises = selectRandomExercises(WORKOUT_CONFIG.exercisesPerSet, 0);
     startBtn.textContent = 'Start Workout';
     startBtn.disabled = false;
     updateTimerDisplay();
