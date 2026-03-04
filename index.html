@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F45 Workout</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Sticky Timer -->
+    <div class="timer-sticky">
+        <div class="timer-container">
+            <div class="timer-display">
+                <span class="timer-phase">READY</span>
+                <span class="timer-time">3</span>
+            </div>
+            <div class="timer-progress">
+                <div class="progress-bar"></div>
+            </div>
+            <div class="timer-controls">
+                <button class="btn-timer primary" id="startBtn">Start Workout</button>
+                <button class="btn-timer" id="resetBtn">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="workout-content">
+        <div class="workout-header">
+            <h1>Today's Workout</h1>
+            <p class="workout-subtitle">2 Sets × 6 Exercises • 40s Work • 20s Rest</p>
+        </div>
+
+        <!-- Current Exercise -->
+        <div class="current-exercise">
+            <div class="exercise-number">Exercise 1</div>
+            <h2 class="exercise-name">-</h2>
+            <p class="exercise-cues">-</p>
+            <div class="exercise-equip">
+                <span class="equip-label">Equipment:</span>
+                <span class="equip-value">-</span>
+            </div>
+            <div class="exercise-controls">
+                <button class="btn-timer" id="nextBtn">Skip / Next →</button>
+            </div>
+        </div>
+
+        <!-- Up Next -->
+        <div class="up-next">
+            <h3>Up Next</h3>
+            <ul class="exercise-list"></ul>
+        </div>
+
+        <!-- All Exercises -->
+        <div class="all-exercises">
+            <h3>All Exercises</h3>
+            <ul class="all-exercise-list"></ul>
+        </div>
+
+        <!-- Set Progress -->
+        <div class="set-progress">
+            <div class="set-indicator">Set 1 of 4</div>
+        </div>
+    </main>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
