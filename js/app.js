@@ -186,7 +186,7 @@ function startTimer() {
         state.timeRemaining--;
         updateTimerDisplay();
         
-        if (state.timeRemaining <= 3 && state.timeRemaining > 0 && state.phase !== 'countdown') {
+        if (state.timeRemaining <= 3 && state.timeRemaining > 0) {
             playBeep();
         }
         
