@@ -418,3 +418,52 @@ body {
     outline: none;
     border-color: var(--accent);
 }
+
+
+/* Time Inputs in Header */
+.time-inputs {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.time-inputs label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.time-inputs input {
+    width: 50px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 14px;
+    text-align: center;
+}
+
+.time-inputs input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+/* Previous Button */
+#prevBtn {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: none;
+    padding: 12px 20px;
+    border-radius: 980px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+#prevBtn:hover {
+    background: var(--bg-secondary);
+}

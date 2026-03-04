@@ -74,6 +74,7 @@ const exerciseEquip = document.querySelector('.equip-value');
 const exerciseList = document.querySelector('.exercise-list');
 const setIndicator = document.querySelector('.set-indicator');
 const nextBtn = document.getElementById('nextBtn');
+const prevBtn = document.getElementById('prevBtn');
 const allExerciseList = document.querySelector('.all-exercise-list');
 
 // LocalStorage
@@ -128,6 +129,7 @@ async function init() {
     startBtn.addEventListener('click', toggleTimer);
     resetBtn.addEventListener('click', resetWorkout);
     nextBtn.addEventListener('click', skipToNext);
+    prevBtn.addEventListener('click', prevExercise);
 }
 
 function renderExercise() {
@@ -319,6 +321,41 @@ function completeWorkout() {
     timerTime.textContent = '✓';
     startBtn.textContent = 'Complete';
     startBtn.disabled = true;
+}
+
+function prevExercise() {
+    // Go back to previous exercise
+    
+    if (state.phase === 'rest') {
+        // If in rest, go back to previous exercise (work)
+        if (state.currentExercise > 0) {
+            state.currentExercise--;
+        } else if (state.currentSet > 0) {
+            // Go to previous set
+            state.currentSet--;
+            state.currentExercise = state.exercises.length - 1;
+        }
+        
+        state.phase = 'work';
+        state.timeRemaining = WORKOUT_CONFIG.workTime;
+        
+    } else if (state.phase === 'work') {
+        // If in work, go to previous exercise (rest)
+        state.phase = 'rest';
+        state.timeRemaining = WORKOUT_CONFIG.restTime;
+    }
+    
+    if (state.isRunning) {
+        pauseTimer();
+        startTimer();
+    }
+    
+    renderExercise();
+    renderUpNext();
+    renderAllExercises();
+    updatePhaseDisplay();
+    updateTimerDisplay();
+    saveExercises();
 }
 
 function skipToNext() {
