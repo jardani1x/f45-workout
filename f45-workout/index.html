@@ -463,7 +463,22 @@
         }
       });
       
-      const currentEl = document.querySelector(`.exercise-item[data-set="${currentRound}"][data-index="${currentExercise}"]`);
+      // During REST, show the NEXT exercise; during WORK, show current
+      let displayRound = currentRound;
+      let displayExercise = currentExercise;
+      
+      if (!isWork) {
+        // Show next exercise during rest
+        if (currentExercise < 5) {
+          displayExercise = currentExercise + 1;
+        } else {
+          // Last exercise of set - show first of next round
+          displayRound = currentRound + 1;
+          displayExercise = 0;
+        }
+      }
+      
+      const currentEl = document.querySelector(`.exercise-item[data-set="${displayRound}"][data-index="${displayExercise}"]`);
       if (currentEl) {
         currentEl.classList.add('current');
         currentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
