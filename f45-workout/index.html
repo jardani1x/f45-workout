@@ -282,6 +282,44 @@
       margin-bottom: 40px;
     }
     .btn-done { background: var(--success); color: #000; }
+    
+    /* Next Exercise Card */
+    .next-up-card {
+      background: linear-gradient(135deg, rgba(10, 132, 255, 0.15), rgba(10, 132, 255, 0.05));
+      border: 1.5px solid var(--accent);
+      border-radius: 20px;
+      padding: 20px;
+      margin: 0 20px 24px;
+      display: none;
+      animation: fadeInUp 0.4s ease;
+    }
+    .next-up-card.show {
+      display: block;
+    }
+    .next-up-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .next-up-name {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .next-up-equip {
+      font-size: 14px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .next-up-cues {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 8px;
+      font-style: italic;
+    }
   </style>
 </head>
 <body>
@@ -300,6 +338,14 @@
         <button class="btn-reset" onclick="resetWorkout()">Reset</button>
       </div>
     </div>
+  </div>
+  
+  <!-- Next Up Card - shown during rest -->
+  <div class="next-up-card" id="nextUpCard">
+    <div class="next-up-label">Coming Up Next</div>
+    <div class="next-up-name" id="nextUpName"></div>
+    <div class="next-up-equip" id="nextUpEquip"></div>
+    <div class="next-up-cues" id="nextUpCues"></div>
   </div>
   
   <div class="workout-container" id="workoutList"></div>
@@ -467,6 +513,31 @@
       let displayRound = currentRound;
       let displayExercise = currentExercise;
       
+      // Next Up card logic
+      const nextUpCard = document.getElementById('nextUpCard');
+      if (!isWork) {
+        // Calculate next exercise
+        let nextR = currentRound;
+        let nextE = currentExercise + 1;
+        if (nextE > 5) {
+          nextE = 0;
+          nextR = currentRound + 1;
+        }
+        
+        // Don't show if we're at the very end
+        if (nextR < 4) {
+          const nextEx = workout[nextR][nextE];
+          document.getElementById('nextUpName').textContent = nextEx.name;
+          document.getElementById('nextUpEquip').textContent = nextEx.equip;
+          document.getElementById('nextUpCues').textContent = nextEx.cues;
+          nextUpCard.classList.add('show');
+        } else {
+          nextUpCard.classList.remove('show');
+        }
+      } else {
+        nextUpCard.classList.remove('show');
+      }
+      
       if (!isWork) {
         // Show next exercise during rest
         if (currentExercise < 5) {
@@ -557,6 +628,7 @@
       document.getElementById('startBtn').textContent = 'Start';
       document.getElementById('startBtn').classList.remove('pause');
       document.getElementById('progress').style.width = '0%';
+      document.getElementById('nextUpCard').classList.remove('show');
       document.querySelectorAll('.exercise-item').forEach(el => el.classList.remove('current', 'done'));
       updateDisplay();
       window.scrollTo({ top: 0, behavior: 'smooth' });
