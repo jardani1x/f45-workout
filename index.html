@@ -1,945 +1,652 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Untitled - Notepad</title>
-<style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-:root {
-  --win-gray: #c0c0c0;
-  --win-dark: #808080;
-  --win-darker: #404040;
-  --win-light: #ffffff;
-  --win-lighter: #dfdfdf;
-  --win-blue: #000080;
-}
-
-body {
-  font-family: "MS Sans Serif", Tahoma, Verdana, sans-serif;
-  font-size: 11px;
-  background: #008080;
-  min-height: 100vh;
-  padding: 2px;
-}
-
-.window {
-  background: var(--win-gray);
-  border: 2px solid;
-  border-color: var(--win-light) var(--win-darker) var(--win-darker) var(--win-light);
-  box-shadow: 1px 1px 0 var(--win-darker);
-  min-width: 400px;
-  max-width: 95vw;
-}
-
-.title-bar {
-  background: var(--win-blue);
-  color: white;
-  padding: 2px 4px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: bold;
-  font-family: "MS Sans Serif", sans-serif;
-  font-size: 11px;
-}
-
-.title-bar-controls {
-  display: flex;
-  gap: 2px;
-}
-
-.title-bar-btn {
-  width: 16px;
-  height: 14px;
-  background: var(--win-gray);
-  border: 1px solid;
-  border-color: var(--win-light) var(--win-darker) var(--win-darker) var(--win-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 9px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.title-bar-btn:active {
-  border-color: var(--win-darker) var(--win-light) var(--win-light) var(--win-darker);
-}
-
-.menu-bar {
-  display: flex;
-  gap: 0;
-  padding: 2px 0;
-  background: var(--win-gray);
-}
-
-.menu-item {
-  padding: 2px 8px;
-  cursor: pointer;
-}
-
-.menu-item:hover {
-  background: var(--win-blue);
-  color: white;
-}
-
-.menu-item u {
-  text-decoration: none;
-}
-
-.menu-dropdown {
-  position: absolute;
-  background: var(--win-gray);
-  border: 2px solid;
-  border-color: var(--win-light) var(--win-darker) var(--win-darker) var(--win-light);
-  display: none;
-  min-width: 150px;
-  z-index: 1000;
-}
-
-.menu-dropdown.show {
-  display: block;
-}
-
-.menu-dropdown-item {
-  padding: 3px 20px;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-}
-
-.menu-dropdown-item:hover {
-  background: var(--win-blue);
-  color: white;
-}
-
-.menu-dropdown-item .shortcut {
-  color: var(--win-dark);
-  margin-left: 20px;
-}
-
-.menu-dropdown-item:hover .shortcut {
-  color: #ccc;
-}
-
-.menu-separator {
-  height: 1px;
-  background: var(--win-dark);
-  margin: 2px 4px;
-}
-
-.toolbar {
-  display: flex;
-  gap: 4px;
-  padding: 4px;
-  border-bottom: 1px solid var(--win-dark);
-  background: var(--win-gray);
-}
-
-.toolbar-btn {
-  width: 24px;
-  height: 22px;
-  background: var(--win-gray);
-  border: 1px solid;
-  border-color: var(--win-light) var(--win-darker) var(--win-darker) var(--win-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.toolbar-btn:active {
-  border-color: var(--win-darker) var(--win-light) var(--win-light) var(--win-darker);
-}
-
-.toolbar-separator {
-  width: 1px;
-  background: var(--win-dark);
-  margin: 0 2px;
-}
-
-.editor-container {
-  padding: 2px;
-  background: var(--win-gray);
-}
-
-#editor {
-  width: 100%;
-  height: calc(100vh - 180px);
-  min-height: 300px;
-  font-family: "Courier New", Courier, monospace;
-  font-size: 12px;
-  resize: none;
-  border: 2px solid;
-  border-color: var(--win-darker) var(--win-light) var(--win-light) var(--win-darker);
-  padding: 2px;
-  outline: none;
-  line-height: 1.2;
-}
-
-.status-bar {
-  display: flex;
-  border: 1px solid;
-  border-color: var(--win-dark) var(--win-light) var(--win-light) var(--win-dark);
-  margin-top: 2px;
-}
-
-.status-bar-section {
-  padding: 2px 8px;
-  border-right: 1px solid;
-  border-color: var(--win-dark);
-  flex: 1;
-  font-size: 11px;
-}
-
-.status-bar-section:last-child {
-  border-right: none;
-  flex: 2;
-  text-align: right;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.3);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-}
-
-.modal-overlay.show {
-  display: flex;
-}
-
-.modal {
-  background: var(--win-gray);
-  border: 2px solid;
-  border-color: var(--win-light) var(--win-darker) var(--win-darker) var(--win-light);
-  padding: 2px;
-  min-width: 300px;
-}
-
-.modal-title {
-  background: var(--win-blue);
-  color: white;
-  padding: 2px 4px;
-  font-weight: bold;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modal-content {
-  padding: 16px;
-}
-
-.modal-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 16px;
-}
-
-.btn {
-  padding: 4px 16px;
-  background: var(--win-gray);
-  border: 2px solid;
-  border-color: var(--win-light) var(--win-darker) var(--win-darker) var(--win-light);
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 11px;
-}
-
-.btn:active {
-  border-color: var(--win-darker) var(--win-light) var(--win-light) var(--win-darker);
-}
-
-.btn-primary {
-  background: var(--win-gray);
-}
-
-.input-field {
-  width: 100%;
-  padding: 2px 4px;
-  border: 2px solid;
-  border-color: var(--win-darker) var(--win-light) var(--win-light) var(--win-darker);
-  font-family: inherit;
-  font-size: 11px;
-  margin-top: 4px;
-}
-
-label {
-  display: block;
-  margin-top: 8px;
-  margin-bottom: 2px;
-}
-
-.checkbox-group {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 8px 0;
-}
-
-.checkbox-group input {
-  width: 13px;
-  height: 13px;
-}
-
-.about-content {
-  text-align: center;
-  padding: 8px;
-}
-
-.about-content h2 {
-  font-size: 16px;
-  margin-bottom: 8px;
-}
-
-.about-content p {
-  margin: 4px 0;
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>F45 Workout</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #000000;
+      --card: #1c1c1e;
+      --text: #ffffff;
+      --text-secondary: #8e8e93;
+      --accent: #0a84ff;
+      --accent-glow: rgba(10, 132, 255, 0.3);
+      --rest: #ff9f0a;
+      --rest-glow: rgba(255, 159, 10, 0.3);
+      --success: #30d158;
+      --border: rgba(255,255,255,0.08);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { 
+      font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif; 
+      background: var(--bg); 
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+    
+    /* Timer Sticky Top */
+    .timer-container {
+      position: sticky;
+      top: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      padding: 28px 20px 32px;
+      text-align: center;
+      z-index: 1000;
+      border-bottom: 1px solid var(--border);
+    }
+    .timer-inner { max-width: 400px; margin: 0 auto; }
+    
+    .phase-label { 
+      font-size: 13px; 
+      font-weight: 600;
+      text-transform: uppercase; 
+      letter-spacing: 3px;
+      margin-bottom: 8px;
+      transition: color 0.3s ease;
+    }
+    .phase-work { color: var(--accent); }
+    .phase-rest { color: var(--rest); }
+    .phase-ready { color: var(--text-secondary); }
+    .phase-complete { color: var(--success); }
+    
+    .timer-display { 
+      font-size: 88px; 
+      font-weight: 300; 
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -3px;
+      line-height: 1;
+      transition: color 0.3s ease;
+    }
+    .timer-work { color: var(--text); text-shadow: 0 0 60px var(--accent-glow); }
+    .timer-rest { color: var(--rest); text-shadow: 0 0 60px var(--rest-glow); }
+    
+    .timer-sub { 
+      font-size: 14px; 
+      color: var(--text-secondary); 
+      margin-top: 8px;
+    }
+    
+    .progress-track {
+      height: 3px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      margin: 20px auto 0;
+      max-width: 300px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.3s linear;
+      width: 0%;
+    }
+    .progress-bar.rest { background: var(--rest); }
+    
+    .controls { 
+      display: flex; 
+      gap: 12px; 
+      justify-content: center; 
+      margin-top: 24px; 
+    }
+    button {
+      padding: 16px 36px;
+      font-size: 17px;
+      font-weight: 500;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      -webkit-tap-highlight-color: transparent;
+      font-family: inherit;
+    }
+    .btn-start { 
+      background: var(--accent); 
+      color: #fff; 
+      min-width: 120px;
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+    .btn-start:hover { background: #3395ff; }
+    .btn-start:active { transform: scale(0.97); }
+    .btn-start.pause { background: var(--card); }
+    .btn-reset { 
+      background: rgba(142,142,147,0.15); 
+      color: var(--text); 
+    }
+    .btn-reset:hover { background: rgba(142,142,147,0.25); }
+    
+    .workout-container { 
+      max-width: 480px; 
+      margin: 0 auto; 
+      padding: 24px 20px 100px;
+    }
+    
+    .set-section { 
+      margin-bottom: 36px;
+      animation: fadeInUp 0.5s ease forwards;
+      opacity: 0;
+    }
+    .set-section:nth-child(1) { animation-delay: 0.1s; }
+    .set-section:nth-child(2) { animation-delay: 0.2s; }
+    .set-section:nth-child(3) { animation-delay: 0.3s; }
+    .set-section:nth-child(4) { animation-delay: 0.4s; }
+    
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .set-header { 
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .set-title { font-size: 24px; font-weight: 600; }
+    .set-badge {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 8px;
+      text-transform: uppercase;
+    }
+    .badge-workout {
+      background: rgba(10,132,255,0.15);
+      color: var(--accent);
+    }
+    .badge-rest {
+      background: rgba(255,159,10,0.15);
+      color: var(--rest);
+    }
+    
+    .exercise-item {
+      background: var(--card);
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 12px;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1.5px solid transparent;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .exercise-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--accent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .exercise-item.current {
+      border-color: var(--accent);
+      background: rgba(10,132,255,0.06);
+      transform: translateX(4px);
+    }
+    .exercise-item.current::before { opacity: 1; }
+    
+    .exercise-item.done {
+      opacity: 0.35;
+      transform: scale(0.98);
+    }
+    
+    .exercise-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .exercise-num {
+      width: 26px;
+      height: 26px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .exercise-item.current .exercise-num {
+      background: var(--accent);
+      color: #fff;
+    }
+    .exercise-item.done .exercise-num {
+      background: var(--success);
+      color: #fff;
+    }
+    
+    .exercise-name { font-size: 18px; font-weight: 500; }
+    
+    .exercise-details { padding-left: 36px; }
+    .exercise-equip { 
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .exercise-cues { 
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+    .pulse { animation: pulse 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    
+    .complete-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+    }
+    .complete-overlay.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .complete-icon { font-size: 80px; margin-bottom: 24px; }
+    .complete-text {
+      font-size: 36px;
+      font-weight: 600;
+      color: var(--success);
+      margin-bottom: 12px;
+    }
+    .complete-sub {
+      font-size: 17px;
+      color: var(--text-secondary);
+      margin-bottom: 40px;
+    }
+    .btn-done { background: var(--success); color: #000; }
+    
+    /* Next Exercise Card */
+    .next-up-card {
+      background: linear-gradient(135deg, rgba(10, 132, 255, 0.15), rgba(10, 132, 255, 0.05));
+      border: 1.5px solid var(--accent);
+      border-radius: 20px;
+      padding: 20px;
+      margin: 0 20px 24px;
+      display: none;
+      animation: fadeInUp 0.4s ease;
+    }
+    .next-up-card.show {
+      display: block;
+    }
+    .next-up-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .next-up-name {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .next-up-equip {
+      font-size: 14px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .next-up-cues {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 8px;
+      font-style: italic;
+    }
+  </style>
 </head>
 <body>
-<div class="window">
-  <div class="title-bar">
-    <span id="title">Untitled - Notepad</span>
-    <div class="title-bar-controls">
-      <div class="title-bar-btn" id="btn-minimize">_</div>
-      <div class="title-bar-btn" id="btn-maximize">□</div>
-      <div class="title-bar-btn" id="btn-close">×</div>
-    </div>
-  </div>
-  
-  <div class="menu-bar">
-    <div class="menu-item" data-menu="file">File</div>
-    <div class="menu-item" data-menu="edit">Edit</div>
-    <div class="menu-item" data-menu="format">Format</div>
-    <div class="menu-item" data-menu="view">View</div>
-    <div class="menu-item" data-menu="help">Help</div>
-  </div>
-  
-  <div id="file-menu" class="menu-dropdown">
-    <div class="menu-dropdown-item" data-action="new"><span>New</span><span class="shortcut">Ctrl+N</span></div>
-    <div class="menu-dropdown-item" data-action="open"><span>Open...</span><span class="shortcut">Ctrl+O</span></div>
-    <div class="menu-separator"></div>
-    <div class="menu-dropdown-item" data-action="save"><span>Save</span><span class="shortcut">Ctrl+S</span></div>
-    <div class="menu-dropdown-item" data-action="saveas"><span>Save As...</span><span class="shortcut">Ctrl+Shift+S</span></div>
-    <div class="menu-separator"></div>
-    <div class="menu-dropdown-item" data-action="page-setup"><span>Page Setup...</span></div>
-    <div class="menu-dropdown-item" data-action="print"><span>Print...</span><span class="shortcut">Ctrl+P</span></div>
-    <div class="menu-separator"></div>
-    <div class="menu-dropdown-item" data-action="exit"><span>Exit</span></div>
-  </div>
-  
-  <div id="edit-menu" class="menu-dropdown">
-    <div class="menu-dropdown-item" data-action="undo"><span>Undo</span><span class="shortcut">Ctrl+Z</span></div>
-    <div class="menu-separator"></div>
-    <div class="menu-dropdown-item" data-action="cut"><span>Cut</span><span class="shortcut">Ctrl+X</span></div>
-    <div class="menu-dropdown-item" data-action="copy"><span>Copy</span><span class="shortcut">Ctrl+C</span></div>
-    <div class="menu-dropdown-item" data-action="paste"><span>Paste</span><span class="shortcut">Ctrl+V</span></div>
-    <div class="menu-dropdown-item" data-action="delete"><span>Delete</span><span class="shortcut">Del</span></div>
-    <div class="menu-separator"></div>
-    <div class="menu-dropdown-item" data-action="select-all"><span>Select All</span><span class="shortcut">Ctrl+A</span></div>
-    <div class="menu-separator"></div>
-    <div class="menu-dropdown-item" data-action="find"><span>Find...</span><span class="shortcut">Ctrl+F</span></div>
-    <div class="menu-dropdown-item" data-action="find-next"><span>Find Next</span><span class="shortcut">F3</span></div>
-    <div class="menu-dropdown-item" data-action="replace"><span>Replace...</span><span class="shortcut">Ctrl+H</span></div>
-    <div class="menu-separator"></div>
-    <div class="menu-dropdown-item" data-action="go"><span>Go To...</span><span class="shortcut">Ctrl+G</span></div>
-  </div>
-  
-  <div id="format-menu" class="menu-dropdown">
-    <div class="menu-dropdown-item" data-action="word-wrap"><span id="wrap-check">☑</span> Word Wrap</div>
-    <div class="menu-separator"></div>
-    <div class="menu-dropdown-item" data-action="font"><span>Font...</span></div>
-  </div>
-  
-  <div id="view-menu" class="menu-dropdown">
-    <div class="menu-dropdown-item" data-action="status-bar"><span id="status-check">☑</span> Status Bar</div>
-    <div class="menu-separator"></div>
-    <div class="menu-dropdown-item" data-action="toolbar"><span id="toolbar-check">☑</span> Toolbar</div>
-  </div>
-  
-  <div id="help-menu" class="menu-dropdown">
-    <div class="menu-dropdown-item" data-action="help"><span>Help Topics</span></div>
-    <div class="menu-separator"></div>
-    <div class="menu-dropdown-item" data-action="about"><span>About Notepad</span></div>
-  </div>
-  
-  <div class="toolbar">
-    <div class="toolbar-btn" data-action="new" title="New (Ctrl+N)">📄</div>
-    <div class="toolbar-btn" data-action="open" title="Open (Ctrl+O)">📂</div>
-    <div class="toolbar-btn" data-action="save" title="Save (Ctrl+S)">💾</div>
-    <div class="toolbar-separator"></div>
-    <div class="toolbar-btn" data-action="cut" title="Cut (Ctrl+X)">✂️</div>
-    <div class="toolbar-btn" data-action="copy" title="Copy (Ctrl+C)">📋</div>
-    <div class="toolbar-btn" data-action="paste" title="Paste (Ctrl+V)">📌</div>
-    <div class="toolbar-separator"></div>
-    <div class="toolbar-btn" data-action="find" title="Find (Ctrl+F)">🔍</div>
-    <div class="toolbar-btn" data-action="replace" title="Replace (Ctrl+H)">🔁</div>
-  </div>
-  
-  <div class="editor-container">
-    <textarea id="editor" placeholder=""></textarea>
-  </div>
-  
-  <div class="status-bar" id="status-bar">
-    <div class="status-bar-section" id="status-line">Ln 1, Col 1</div>
-    <div class="status-bar-section" id="status-encoding">UTF-8</div>
-    <div class="status-bar-section" id="status-format">Windows (CRLF)</div>
-  </div>
-</div>
-
-<!-- Find/Replace Dialog -->
-<div id="find-dialog" class="modal-overlay">
-  <div class="modal">
-    <div class="modal-title">
-      <span>Find</span>
-      <div class="title-bar-btn" onclick="closeFindDialog()">×</div>
-    </div>
-    <div class="modal-content">
-      <label>Find what:</label>
-      <input type="text" id="find-text" class="input-field">
-      <div class="modal-buttons">
-        <button class="btn" onclick="findNext()">Find Next</button>
-        <button class="btn" onclick="closeFindDialog()">Cancel</button>
+  <div class="timer-container">
+    <div class="timer-inner">
+      <div class="phase-label phase-ready" id="phase">READY</div>
+      <div class="timer-display timer-work" id="timer">00:40</div>
+      <div class="timer-sub" id="round">Round 1/4 • Exercise 1/6</div>
+      
+      <div class="progress-track">
+        <div class="progress-bar" id="progress"></div>
+      </div>
+      
+      <div class="controls">
+        <button class="btn-start" id="startBtn" onclick="toggleWorkout()">Start</button>
+        <button class="btn-reset" onclick="resetWorkout()">Reset</button>
       </div>
     </div>
   </div>
-</div>
-
-<div id="replace-dialog" class="modal-overlay">
-  <div class="modal">
-    <div class="modal-title">
-      <span>Replace</span>
-      <div class="title-bar-btn" onclick="closeReplaceDialog()">×</div>
-    </div>
-    <div class="modal-content">
-      <label>Find what:</label>
-      <input type="text" id="replace-find" class="input-field">
-      <label>Replace with:</label>
-      <input type="text" id="replace-with" class="input-field">
-      <div class="modal-buttons">
-        <button class="btn" onclick="replaceNext()">Replace</button>
-        <button class="btn" onclick="replaceAll()">Replace All</button>
-        <button class="btn" onclick="closeReplaceDialog()">Cancel</button>
-      </div>
-    </div>
+  
+  <!-- Next Up Card - shown during rest -->
+  <div class="next-up-card" id="nextUpCard">
+    <div class="next-up-label">Coming Up Next</div>
+    <div class="next-up-name" id="nextUpName"></div>
+    <div class="next-up-equip" id="nextUpEquip"></div>
+    <div class="next-up-cues" id="nextUpCues"></div>
   </div>
-</div>
-
-<!-- About Dialog -->
-<div id="about-dialog" class="modal-overlay">
-  <div class="modal">
-    <div class="modal-title">
-      <span>About Notepad</span>
-      <div class="title-bar-btn" onclick="closeAboutDialog()">×</div>
-    </div>
-    <div class="modal-content">
-      <div class="about-content">
-        <h2>Notepad</h2>
-        <p>Windows 95/98 Style Notepad</p>
-        <p>Version 1.0</p>
-        <p style="margin-top: 16px; color: #666;">A nostalgic notepad web app</p>
-      </div>
-      <div class="modal-buttons">
-        <button class="btn" onclick="closeAboutDialog()">OK</button>
-      </div>
-    </div>
+  
+  <div class="workout-container" id="workoutList"></div>
+  
+  <div class="complete-overlay" id="completeOverlay">
+    <div class="complete-icon">🎉</div>
+    <div class="complete-text">Workout Complete!</div>
+    <div class="complete-sub">Great job finishing today's session</div>
+    <button class="btn-start btn-done" onclick="closeComplete()">Done</button>
   </div>
-</div>
 
-<!-- Font Dialog -->
-<div id="font-dialog" class="modal-overlay">
-  <div class="modal">
-    <div class="modal-title">
-      <span>Font</span>
-      <div class="title-bar-btn" onclick="closeFontDialog()">×</div>
-    </div>
-    <div class="modal-content">
-      <label>Font:</label>
-      <select id="font-family" class="input-field">
-        <option value="Courier New">Courier New</option>
-        <option value="Consolas">Consolas</option>
-        <option value="Lucida Console">Lucida Console</option>
-        <option value="Monaco">Monaco</option>
-      </select>
-      <label>Size:</label>
-      <select id="font-size" class="input-field">
-        <option value="8">8</option>
-        <option value="10">10</option>
-        <option value="12" selected>12</option>
-        <option value="14">14</option>
-        <option value="16">16</option>
-        <option value="18">18</option>
-        <option value="24">24</option>
-      </select>
-      <div class="modal-buttons">
-        <button class="btn" onclick="applyFont()">OK</button>
-        <button class="btn" onclick="closeFontDialog()">Cancel</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-let currentFile = null;
-let isModified = false;
-let wordWrap = true;
-let showStatusBar = true;
-let showToolbar = true;
-
-// Editor element
-const editor = document.getElementById('editor');
-const titleEl = document.getElementById('title');
-const statusLine = document.getElementById('status-line');
-const statusEncoding = document.getElementById('status-encoding');
-const statusFormat = document.getElementById('status-format');
-const wrapCheck = document.getElementById('wrap-check');
-const statusCheck = document.getElementById('status-check');
-const toolbarCheck = document.getElementById('toolbar-check');
-const toolbar = document.querySelector('.toolbar');
-const statusBar = document.getElementById('status-bar');
-
-// Menu handling
-let activeMenu = null;
-
-document.querySelectorAll('.menu-item').forEach(item => {
-  item.addEventListener('click', (e) => {
-    const menuId = item.dataset.menu;
-    const menu = document.getElementById(menuId + '-menu');
+  <script>
+    const EXERCISE_LIBRARY = {
+      pull: [
+        { name: "Pull-Ups / Chin-Ups", equip: "Pull-up bar", cues: "Full hang; ribs down; controlled reps" },
+        { name: "DB Bent-Over Row", equip: "2×10kg DB", cues: "Flat back; pull to pockets; pause 1s" },
+        { name: "Single-Arm DB Row", equip: "1×10kg DB", cues: "Brace hard; elbow to hip; slow return" },
+        { name: "Band Row", equip: "Heavy band", cues: "Squeeze shoulder blades; control return" },
+        { name: "Band Face Pull", equip: "Light band", cues: "Pull to eyebrows; elbows high; 1s squeeze" },
+        { name: "DB Hammer Curl", equip: "2×10kg DB", cues: "Neutral grip; elbows pinned; slow eccentric" }
+      ],
+      push: [
+        { name: "DB Strict Press", equip: "2×10kg DB", cues: "Ribs down; glutes tight; smooth press" },
+        { name: "DB Push Press", equip: "2×10kg DB", cues: "Dip-drive; punch to lockout; no over-arch" },
+        { name: "DB Floor Press", equip: "2×10kg DB", cues: "Elbows ~45°; pause on floor; press fast" },
+        { name: "Push-Ups", equip: "Bodyweight", cues: "Full-body tension; chest to floor; lock out" },
+        { name: "DB Lateral Raise", equip: "2×5kg DB", cues: "Raise to mid-chest; slow lower; no swing" },
+        { name: "Band Triceps Pushdown", equip: "Band", cues: "Lock elbows; full extension; slow return" }
+      ],
+      squat: [
+        { name: "DB Goblet Squat", equip: "1×10kg DB", cues: "Elbows inside knees; full-foot pressure" },
+        { name: "DB Thruster", equip: "2×5kg DB", cues: "Squat → drive overhead; steady breathing" },
+        { name: "DB Reverse Lunge", equip: "2×5kg DB", cues: "10 total = 5/leg; step back softly" },
+        { name: "DB Split Squat", equip: "2×5kg DB", cues: "Control depth; knee tracks toes; upright torso" },
+        { name: "Band Squat", equip: "Band", cues: "Knees out; constant tension; full depth" },
+        { name: "Tempo Air Squat", equip: "Bodyweight", cues: "3s down; 1s pause; stand tall" }
+      ],
+      hinge: [
+        { name: "DB Romanian Deadlift", equip: "2×10kg DB", cues: "Hips back; lats on; feel hamstrings" },
+        { name: "DB Single-Leg RDL", equip: "1×10kg DB", cues: "Square hips; reach long; control" },
+        { name: "Band Good Morning", equip: "Heavy band", cues: "Band at hips; hinge; squeeze glutes" },
+        { name: "Glute Bridge", equip: "Bodyweight", cues: "Ribs down; full hip extension; pause" },
+        { name: "DB Hang Clean", equip: "2×10kg DB", cues: "Jump-shrug; fast elbows; soft catch" },
+        { name: "Single-Arm DB Snatch", equip: "1×10kg DB", cues: "Hip drive; DB close; punch overhead" }
+      ]
+    };
     
-    if (activeMenu === menu) {
-      closeMenu();
-    } else {
-      closeMenu();
-      const rect = item.getBoundingClientRect();
-      menu.style.left = rect.left + 'px';
-      menu.style.top = (rect.top + rect.height) + 'px';
-      menu.classList.add('show');
-      activeMenu = menu;
-    }
-    e.stopPropagation();
-  });
-});
-
-function closeMenu() {
-  document.querySelectorAll('.menu-dropdown').forEach(m => m.classList.remove('show'));
-  activeMenu = null;
-}
-
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.menu-bar')) {
-    closeMenu();
-  }
-});
-
-// Menu actions
-document.querySelectorAll('.menu-dropdown-item').forEach(item => {
-  item.addEventListener('click', () => {
-    const action = item.dataset.action;
-    handleAction(action);
-    closeMenu();
-  });
-});
-
-function handleAction(action) {
-  switch(action) {
-    case 'new':
-      newFile();
-      break;
-    case 'open':
-      openFile();
-      break;
-    case 'save':
-      saveFile();
-      break;
-    case 'saveas':
-      saveFileAs();
-      break;
-    case 'exit':
-      if (confirmExit()) window.close();
-      break;
-    case 'undo':
-      document.execCommand('undo');
-      break;
-    case 'cut':
-      document.execCommand('cut');
-      break;
-    case 'copy':
-      document.execCommand('copy');
-      break;
-    case 'paste':
-      document.execCommand('paste');
-      break;
-    case 'delete':
-      document.execCommand('delete');
-      break;
-    case 'select-all':
-      editor.select();
-      break;
-    case 'find':
-      showFindDialog();
-      break;
-    case 'replace':
-      showReplaceDialog();
-      break;
-    case 'find-next':
-      findNext();
-      break;
-    case 'word-wrap':
-      wordWrap = !wordWrap;
-      editor.style.whiteSpace = wordWrap ? 'pre-wrap' : 'pre';
-      wrapCheck.textContent = wordWrap ? '☑' : '☐';
-      break;
-    case 'font':
-      showFontDialog();
-      break;
-    case 'status-bar':
-      showStatusBar = !showStatusBar;
-      statusBar.style.display = showStatusBar ? 'flex' : 'none';
-      statusCheck.textContent = showStatusBar ? '☑' : '☐';
-      resizeEditor();
-      break;
-    case 'toolbar':
-      showToolbar = !showToolbar;
-      toolbar.style.display = showToolbar ? 'flex' : 'none';
-      toolbarCheck.textContent = showToolbar ? '☑' : '☐';
-      resizeEditor();
-      break;
-    case 'about':
-      showAboutDialog();
-      break;
-    case 'page-setup':
-      alert('Page Setup - Feature not implemented in web version');
-      break;
-    case 'print':
-      window.print();
-      break;
-    case 'go':
-      goToLine();
-      break;
-  }
-}
-
-// Toolbar button actions
-document.querySelectorAll('.toolbar-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const action = btn.dataset.action;
-    handleAction(action);
-  });
-});
-
-// Window controls
-document.getElementById('btn-close').addEventListener('click', () => {
-  if (confirmExit()) window.close();
-});
-
-document.getElementById('btn-minimize').addEventListener('click', () => {
-  document.body.style.display = 'none';
-  setTimeout(() => document.body.style.display = 'block', 100);
-});
-
-document.getElementById('btn-maximize').addEventListener('click', () => {
-  const win = document.querySelector('.window');
-  if (win.style.width === '100%') {
-    win.style.width = '';
-    win.style.maxWidth = '95vw';
-  } else {
-    win.style.width = '100%';
-    win.style.maxWidth = '100%';
-  }
-  resizeEditor();
-});
-
-// File operations
-function newFile() {
-  if (isModified && !confirm('Do you want to save changes?')) return;
-  editor.value = '';
-  currentFile = null;
-  isModified = false;
-  updateTitle();
-}
-
-function openFile() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = '.txt,.md,.js,.html,.css,.json,.xml,.log';
-  input.onchange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        editor.value = ev.target.result;
-        currentFile = file.name;
-        isModified = false;
-        updateTitle();
-        updateStatus();
-      };
-      reader.readAsText(file);
-    }
-  };
-  input.click();
-}
-
-function saveFile() {
-  if (currentFile) {
-    downloadFile(editor.value, currentFile);
-    isModified = false;
-    updateTitle();
-  } else {
-    saveFileAs();
-  }
-}
-
-function saveFileAs() {
-  const filename = prompt('Enter file name:', currentFile || 'untitled.txt');
-  if (filename) {
-    downloadFile(editor.value, filename);
-    currentFile = filename;
-    isModified = false;
-    updateTitle();
-  }
-}
-
-function downloadFile(content, filename) {
-  const blob = new Blob([content], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function confirmExit() {
-  if (isModified) {
-    return confirm('Do you want to save changes?');
-  }
-  return true;
-}
-
-// Editor events
-editor.addEventListener('input', () => {
-  if (!isModified) {
-    isModified = true;
-    updateTitle();
-  }
-  updateStatus();
-});
-
-editor.addEventListener('keyup', updateStatus);
-editor.addEventListener('click', updateStatus);
-
-function updateTitle() {
-  const name = currentFile || 'Untitled';
-  const modified = isModified ? '*' : '';
-  titleEl.textContent = `${modified}${name} - Notepad`;
-}
-
-function updateStatus() {
-  const text = editor.value;
-  const pos = editor.selectionStart;
-  const lines = text.substr(0, pos).split('\n');
-  const line = lines.length;
-  const col = lines[lines.length - 1].length + 1;
-  
-  statusLine.textContent = `Ln ${line}, Col ${col}`;
-  
-  // Update char count
-  const chars = text.length;
-  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-  statusFormat.textContent = `${chars} chars, ${words} words`;
-}
-
-// Dialog functions
-function showFindDialog() {
-  document.getElementById('find-dialog').classList.add('show');
-  document.getElementById('find-text').focus();
-}
-
-function closeFindDialog() {
-  document.getElementById('find-dialog').classList.remove('show');
-}
-
-function showReplaceDialog() {
-  document.getElementById('replace-dialog').classList.add('show');
-  document.getElementById('replace-find').focus();
-}
-
-function closeReplaceDialog() {
-  document.getElementById('replace-dialog').classList.remove('show');
-}
-
-function showAboutDialog() {
-  document.getElementById('about-dialog').classList.add('show');
-}
-
-function closeAboutDialog() {
-  document.getElementById('about-dialog').classList.remove('show');
-}
-
-function showFontDialog() {
-  document.getElementById('font-dialog').classList.add('show');
-}
-
-function closeFontDialog() {
-  document.getElementById('font-dialog').classList.remove('show');
-}
-
-function applyFont() {
-  const font = document.getElementById('font-family').value;
-  const size = document.getElementById('font-size').value;
-  editor.style.fontFamily = font;
-  editor.style.fontSize = size + 'px';
-  closeFontDialog();
-}
-
-function findNext() {
-  const searchText = document.getElementById('find-text').value || document.getElementById('replace-find').value;
-  if (!searchText) return;
-  
-  const content = editor.value;
-  const pos = editor.selectionStart;
-  const found = content.indexOf(searchText, pos);
-  
-  if (found !== -1) {
-    editor.focus();
-    editor.setSelectionRange(found, found + searchText.length);
-  } else {
-    // Wrap around
-    const wrapped = content.indexOf(searchText);
-    if (wrapped !== -1) {
-      editor.focus();
-      editor.setSelectionRange(wrapped, wrapped + searchText.length);
-    } else {
-      alert('Cannot find "' + searchText + '"');
-    }
-  }
-}
-
-function replaceNext() {
-  const findText = document.getElementById('replace-find').value;
-  const replaceText = document.getElementById('replace-with').value;
-  
-  if (editor.selectionStart !== editor.selectionEnd) {
-    editor.setValue(editor.value.substr(0, editor.selectionStart) + replaceText + editor.value.substr(editor.selectionEnd));
-    isModified = true;
-    updateTitle();
-  }
-  findNext();
-}
-
-function replaceAll() {
-  const findText = document.getElementById('replace-find').value;
-  const replaceText = document.getElementById('replace-with').value;
-  
-  if (findText) {
-    editor.value = editor.value.split(findText).join(replaceText);
-    isModified = true;
-    updateTitle();
-    closeReplaceDialog();
-  }
-}
-
-function goToLine() {
-  const lineNum = prompt('Enter line number:', '1');
-  if (lineNum) {
-    const lines = editor.value.split('\n');
-    const num = parseInt(lineNum);
-    if (num > 0 && num <= lines.length) {
-      let pos = 0;
-      for (let i = 0; i < num - 1; i++) {
-        pos += lines[i].length + 1;
-      }
-      editor.focus();
-      editor.setSelectionRange(pos, pos);
-    } else {
-      alert('Line number out of range');
-    }
-  }
-}
-
-function resizeEditor() {
-  const win = document.querySelector('.window');
-  const availableHeight = window.innerHeight - win.offsetTop - 4;
-  const titleBar = document.querySelector('.title-bar').offsetHeight;
-  const menuBar = document.querySelector('.menu-bar').offsetHeight;
-  const toolbarHeight = showToolbar ? document.querySelector('.toolbar').offsetHeight : 0;
-  const statusHeight = showStatusBar ? document.querySelector('.status-bar').offsetHeight : 0;
-  const padding = 10;
-  
-  editor.style.height = (availableHeight - titleBar - menuBar - toolbarHeight - statusHeight - padding) + 'px';
-}
-
-// Keyboard shortcuts
-document.addEventListener('keydown', (e) => {
-  if (e.ctrlKey) {
-    switch(e.key.toLowerCase()) {
-      case 'n':
-        e.preventDefault();
-        newFile();
-        break;
-      case 'o':
-        e.preventDefault();
-        openFile();
-        break;
-      case 's':
-        e.preventDefault();
-        if (e.shiftKey) {
-          saveFileAs();
-        } else {
-          saveFile();
+    const seededRandom = (seed) => {
+      const x = Math.sin(seed) * 10000;
+      return x - Math.floor(x);
+    };
+    
+    const today = new Date().toISOString().slice(0, 10);
+    const seed = today.split('-').join('');
+    
+    function getRandomExercises(category, count, seedOffset) {
+      const exercises = EXERCISE_LIBRARY[category];
+      const result = [];
+      const used = new Set();
+      for (let i = 0; i < count; i++) {
+        let idx = Math.floor(seededRandom(seed + seedOffset + i) * exercises.length);
+        while (used.has(idx) && used.size < exercises.length) {
+          idx = (idx + 1) % exercises.length;
         }
-        break;
-      case 'f':
-        e.preventDefault();
-        showFindDialog();
-        break;
-      case 'h':
-        e.preventDefault();
-        showReplaceDialog();
-        break;
-      case 'a':
-        e.preventDefault();
-        editor.select();
-        break;
-      case 'z':
-        // Undo is handled by browser
-        break;
+        used.add(idx);
+        result.push(exercises[idx]);
+      }
+      return result;
     }
-  }
-  
-  if (e.key === 'F3') {
-    e.preventDefault();
-    findNext();
-  }
-});
-
-// Window resize
-window.addEventListener('resize', resizeEditor);
-
-// Initialize
-updateTitle();
-updateStatus();
-resizeEditor();
-
-// Set initial word wrap
-editor.style.whiteSpace = 'pre-wrap';
-</script>
-
+    
+    const set1 = [
+      ...getRandomExercises('pull', 2, 1),
+      ...getRandomExercises('push', 2, 10),
+      ...getRandomExercises('squat', 1, 20),
+      ...getRandomExercises('hinge', 1, 30)
+    ];
+    
+    const set2 = [
+      ...getRandomExercises('squat', 2, 40),
+      ...getRandomExercises('hinge', 2, 50),
+      ...getRandomExercises('pull', 1, 60),
+      ...getRandomExercises('push', 1, 70)
+    ];
+    
+    const workout = [set1, set2, set1, set2];
+    const setNames = ['Set 1', 'Set 2', 'Set 1', 'Set 2'];
+    const isAfterRest = [false, false, true, false];
+    
+    function renderWorkout() {
+      const container = document.getElementById('workoutList');
+      let html = '';
+      
+      workout.forEach((set, setIdx) => {
+        html += `<div class="set-section" id="set-${setIdx}">
+          <div class="set-header">
+            <div class="set-title">${setNames[setIdx]}</div>
+            ${isAfterRest[setIdx] ? '<div class="set-badge badge-rest">2 min rest after</div>' : '<div class="set-badge badge-workout">6 exercises</div>'}
+          </div>`;
+        
+        set.forEach((ex, idx) => {
+          html += `<div class="exercise-item" data-set="${setIdx}" data-index="${idx}">
+            <div class="exercise-header">
+              <div class="exercise-num">${idx + 1}</div>
+              <div class="exercise-name">${ex.name}</div>
+            </div>
+            <div class="exercise-details">
+              <div class="exercise-equip">${ex.equip}</div>
+              <div class="exercise-cues">${ex.cues}</div>
+            </div>
+          </div>`;
+        });
+        
+        html += '</div>';
+      });
+      
+      container.innerHTML = html;
+    }
+    
+    let timerInterval;
+    let currentRound = 0;
+    let currentExercise = 0;
+    let isWork = true;
+    let timeLeft = WORK_TIME;
+    let isRunning = false;
+    
+    const WORK_TIME = 40;
+    const REST_TIME = 20;
+    const LONG_REST_TIME = 120;
+    
+    function updateDisplay() {
+      const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+      const secs = (timeLeft % 60).toString().padStart(2, '0');
+      document.getElementById('timer').textContent = `${mins}:${secs}`;
+      document.getElementById('round').textContent = `Round ${currentRound + 1}/4 • Exercise ${currentExercise + 1}/6`;
+      
+      const phase = document.getElementById('phase');
+      const timerEl = document.getElementById('timer');
+      const progressBar = document.getElementById('progress');
+      
+      if (isWork) {
+        phase.textContent = 'WORK';
+        phase.className = 'phase-label phase-work';
+        timerEl.className = 'timer-display timer-work';
+      } else {
+        phase.textContent = 'REST';
+        phase.className = 'phase-label phase-rest';
+        timerEl.className = 'timer-display timer-rest';
+      }
+      
+      const totalTime = isWork ? WORK_TIME : (isAfterRest[currentRound] ? LONG_REST_TIME : REST_TIME);
+      const progress = ((totalTime - timeLeft) / totalTime) * 100;
+      progressBar.style.width = progress + '%';
+      progressBar.className = 'progress-bar' + (isWork ? '' : ' rest');
+      
+      document.querySelectorAll('.exercise-item').forEach(el => {
+        el.classList.remove('current', 'done');
+        const setIdx = parseInt(el.dataset.set);
+        const idx = parseInt(el.dataset.index);
+        if (setIdx < currentRound || (setIdx === currentRound && idx < currentExercise)) {
+          el.classList.add('done');
+        }
+      });
+      
+      // During REST, show the NEXT exercise; during WORK, show current
+      let displayRound = currentRound;
+      let displayExercise = currentExercise;
+      
+      // Next Up card logic
+      const nextUpCard = document.getElementById('nextUpCard');
+      if (!isWork) {
+        // Calculate next exercise
+        let nextR = currentRound;
+        let nextE = currentExercise + 1;
+        if (nextE > 5) {
+          nextE = 0;
+          nextR = currentRound + 1;
+        }
+        
+        // Don't show if we're at the very end
+        if (nextR < 4) {
+          const nextEx = workout[nextR][nextE];
+          document.getElementById('nextUpName').textContent = nextEx.name;
+          document.getElementById('nextUpEquip').textContent = nextEx.equip;
+          document.getElementById('nextUpCues').textContent = nextEx.cues;
+          nextUpCard.classList.add('show');
+        } else {
+          nextUpCard.classList.remove('show');
+        }
+      } else {
+        nextUpCard.classList.remove('show');
+      }
+      
+      if (!isWork) {
+        // Show next exercise during rest
+        if (currentExercise < 5) {
+          displayExercise = currentExercise + 1;
+        } else {
+          // Last exercise of set - show first of next round
+          displayRound = currentRound + 1;
+          displayExercise = 0;
+        }
+      }
+      
+      const currentEl = document.querySelector(`.exercise-item[data-set="${displayRound}"][data-index="${displayExercise}"]`);
+      if (currentEl) {
+        currentEl.classList.add('current');
+        currentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+    
+    function tick() {
+      if (timeLeft > 0) {
+        timeLeft--;
+        updateDisplay();
+      } else {
+        if (isWork) {
+          const isLastExercise = currentExercise === 5;
+          const needsLongRest = isAfterRest[currentRound];
+          
+          if (isLastExercise && currentRound === 3) {
+            stopWorkout();
+            showComplete();
+            return;
+          } else if (isLastExercise && !needsLongRest) {
+            isWork = false;
+            timeLeft = LONG_REST_TIME;
+          } else {
+            isWork = false;
+            timeLeft = REST_TIME;
+          }
+        } else {
+          isWork = true;
+          
+          if (currentExercise < 5) {
+            currentExercise++;
+            timeLeft = WORK_TIME;
+          } else {
+            currentRound++;
+            currentExercise = 0;
+            timeLeft = WORK_TIME;
+          }
+        }
+        
+        const timer = document.getElementById('timer');
+        timer.classList.remove('pulse');
+        void timer.offsetWidth;
+        timer.classList.add('pulse');
+        
+        updateDisplay();
+      }
+    }
+    
+    function toggleWorkout() {
+      if (isRunning) {
+        stopWorkout();
+        document.getElementById('startBtn').textContent = 'Resume';
+        document.getElementById('startBtn').classList.remove('pause');
+      } else {
+        isRunning = true;
+        document.getElementById('startBtn').textContent = 'Pause';
+        document.getElementById('startBtn').classList.add('pause');
+        timerInterval = setInterval(tick, 1000);
+      }
+    }
+    
+    function stopWorkout() {
+      isRunning = false;
+      clearInterval(timerInterval);
+    }
+    
+    function resetWorkout() {
+      stopWorkout();
+      currentRound = 0;
+      currentExercise = 0;
+      isWork = true;
+      timeLeft = WORK_TIME;
+      document.getElementById('phase').textContent = 'READY';
+      document.getElementById('phase').className = 'phase-label phase-ready';
+      document.getElementById('timer').className = 'timer-display timer-work';
+      document.getElementById('startBtn').textContent = 'Start';
+      document.getElementById('startBtn').classList.remove('pause');
+      document.getElementById('progress').style.width = '0%';
+      document.getElementById('nextUpCard').classList.remove('show');
+      document.querySelectorAll('.exercise-item').forEach(el => el.classList.remove('current', 'done'));
+      updateDisplay();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    function showComplete() {
+      document.getElementById('phase').textContent = 'COMPLETE';
+      document.getElementById('phase').className = 'phase-label phase-complete';
+      document.getElementById('completeOverlay').classList.add('show');
+    }
+    
+    function closeComplete() {
+      document.getElementById('completeOverlay').classList.remove('show');
+      resetWorkout();
+    }
+    
+    renderWorkout();
+    updateDisplay();
+  </script>
 </body>
 </html>
