@@ -132,7 +132,7 @@
     .set-section { 
       margin-bottom: 36px;
       animation: fadeInUp 0.5s ease forwards;
-      opacity: 0;
+      opacity: 1;
     }
     .set-section:nth-child(1) { animation-delay: 0.1s; }
     .set-section:nth-child(2) { animation-delay: 0.2s; }
@@ -334,8 +334,8 @@
       </div>
       
       <div class="controls">
-        <button class="btn-start" id="startBtn" onclick="toggleWorkout()">Start</button>
-        <button class="btn-reset" onclick="resetWorkout()">Reset</button>
+        <button class="btn-start" id="startBtn">Start</button>
+        <button class="btn-reset" id="resetBtn">Reset</button>
       </div>
     </div>
   </div>
@@ -354,7 +354,7 @@
     <div class="complete-icon">🎉</div>
     <div class="complete-text">Workout Complete!</div>
     <div class="complete-sub">Great job finishing today's session</div>
-    <button class="btn-start btn-done" onclick="closeComplete()">Done</button>
+    <button class="btn-start btn-done" id="doneBtn">Done</button>
   </div>
 
   <script>
@@ -558,7 +558,6 @@
       const currentEl = document.querySelector(`.exercise-item[data-set="${displayRound}"][data-index="${displayExercise}"]`);
       if (currentEl) {
         currentEl.classList.add('current');
-        currentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }
     
@@ -651,6 +650,9 @@
       resetWorkout();
     }
     
+    document.getElementById('startBtn').addEventListener('click', toggleWorkout);
+    document.getElementById('resetBtn').addEventListener('click', resetWorkout);
+    document.getElementById('doneBtn').addEventListener('click', closeComplete);
     renderWorkout();
     updateDisplay();
   </script>
