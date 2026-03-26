@@ -264,6 +264,7 @@
         <div class="controls">
           <button id="startBtn" class="primary">Start</button>
           <button id="resetBtn" class="secondary">Reset</button>
+          <button id="settingsBtn" class="ghost">Settings</button>
         </div>
       </div>
     </header>
@@ -276,6 +277,23 @@
 
     <main id="workoutRoot"></main>
     <div class="footer-note">Production build • static single-file app</div>
+  </div>
+
+  <div id="settingsOverlay" class="overlay">
+    <div class="card complete-box" style="text-align:left; max-width:520px;">
+      <div class="complete-title" style="font-size:1.2rem; margin-bottom:14px;">Workout Settings</div>
+      <div style="display:grid; gap:12px;">
+        <label>Work Seconds<br><input id="workInput" type="number" min="5" max="300" style="width:100%; margin-top:6px; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--panel-2); color:var(--text);"></label>
+        <label>Rest Seconds<br><input id="restInput" type="number" min="5" max="300" style="width:100%; margin-top:6px; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--panel-2); color:var(--text);"></label>
+        <label>Long Rest Seconds<br><input id="longRestInput" type="number" min="10" max="600" style="width:100%; margin-top:6px; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--panel-2); color:var(--text);"></label>
+        <label><input id="soundToggle" type="checkbox"> Sound cues</label>
+        <label><input id="vibrateToggle" type="checkbox"> Vibration cues</label>
+      </div>
+      <div class="controls" style="justify-content:flex-end; margin-top:18px;">
+        <button id="closeSettingsBtn" class="secondary">Close</button>
+        <button id="saveSettingsBtn" class="primary">Save</button>
+      </div>
+    </div>
   </div>
 
   <div id="completeOverlay" class="overlay">
@@ -291,9 +309,9 @@
     (function () {
       'use strict';
 
-      const WORK_TIME = 40;
-      const REST_TIME = 20;
-      const LONG_REST_TIME = 120;
+      let WORK_TIME = 40;
+      let REST_TIME = 20;
+      let LONG_REST_TIME = 120;
 
       const EXERCISE_LIBRARY = {
         pull: [
@@ -381,12 +399,68 @@
         startBtn: document.getElementById('startBtn'),
         resetBtn: document.getElementById('resetBtn'),
         doneBtn: document.getElementById('doneBtn'),
+        settingsBtn: document.getElementById('settingsBtn'),
+        settingsOverlay: document.getElementById('settingsOverlay'),
+        closeSettingsBtn: document.getElementById('closeSettingsBtn'),
+        saveSettingsBtn: document.getElementById('saveSettingsBtn'),
+        workInput: document.getElementById('workInput'),
+        restInput: document.getElementById('restInput'),
+        longRestInput: document.getElementById('longRestInput'),
+        soundToggle: document.getElementById('soundToggle'),
+        vibrateToggle: document.getElementById('vibrateToggle'),
         nextUpCard: document.getElementById('nextUpCard'),
         nextUpName: document.getElementById('nextUpName'),
         nextUpMeta: document.getElementById('nextUpMeta'),
         workoutRoot: document.getElementById('workoutRoot'),
         completeOverlay: document.getElementById('completeOverlay')
       };
+
+
+      const audioCtx = window.AudioContext ? new AudioContext() : null;
+      const prefs = JSON.parse(localStorage.getItem('f45Prefs') || '{"sound":true,"vibrate":false,"work":40,"rest":20,"longRest":120}');
+      WORK_TIME = Number(prefs.work || 40);
+      REST_TIME = Number(prefs.rest || 20);
+      LONG_REST_TIME = Number(prefs.longRest || 120);
+
+      function beep(freq = 880, duration = 120) {
+        if (!prefs.sound || !audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.type = 'sine'; osc.frequency.value = freq;
+        gain.gain.value = 0.03;
+        osc.start();
+        setTimeout(() => osc.stop(), duration);
+      }
+
+      function buzz(ms = 120) {
+        if (prefs.vibrate && navigator.vibrate) navigator.vibrate(ms);
+      }
+
+      function openSettings() {
+        els.workInput.value = WORK_TIME;
+        els.restInput.value = REST_TIME;
+        els.longRestInput.value = LONG_REST_TIME;
+        els.soundToggle.checked = !!prefs.sound;
+        els.vibrateToggle.checked = !!prefs.vibrate;
+        els.settingsOverlay.classList.add('show');
+      }
+
+      function closeSettings() {
+        els.settingsOverlay.classList.remove('show');
+      }
+
+      function saveSettings() {
+        WORK_TIME = Math.max(5, Number(els.workInput.value || 40));
+        REST_TIME = Math.max(5, Number(els.restInput.value || 20));
+        LONG_REST_TIME = Math.max(10, Number(els.longRestInput.value || 120));
+        prefs.work = WORK_TIME; prefs.rest = REST_TIME; prefs.longRest = LONG_REST_TIME;
+        prefs.sound = !!els.soundToggle.checked;
+        prefs.vibrate = !!els.vibrateToggle.checked;
+        localStorage.setItem('f45Prefs', JSON.stringify(prefs));
+        resetWorkout();
+        closeSettings();
+      }
 
       const workout = buildWorkout();
       const state = {
@@ -534,7 +608,7 @@
           state.timeLeft -= 1;
           updateTimer();
         } else {
-          advancePhase();
+          beep(state.isWork ? 620 : 920, 150); buzz(120); advancePhase();
         }
       }
 
@@ -559,8 +633,11 @@
         renderAll();
       }
 
-      els.startBtn.addEventListener('click', toggleStart);
+      els.startBtn.addEventListener('click', () => { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); toggleStart(); });
       els.resetBtn.addEventListener('click', resetWorkout);
+      els.settingsBtn.addEventListener('click', openSettings);
+      els.closeSettingsBtn.addEventListener('click', closeSettings);
+      els.saveSettingsBtn.addEventListener('click', saveSettings);
       els.doneBtn.addEventListener('click', () => {
         els.completeOverlay.classList.remove('show');
         resetWorkout();
