@@ -316,41 +316,49 @@
       let LONG_REST_TIME = 120;
 
       const EXERCISE_LIBRARY = {
-        pull: [
-          { name: 'Pull-Ups / Chin-Ups', equip: 'Pull-up bar', cues: 'Full hang; ribs down; controlled reps' },
-          { name: 'DB Bent-Over Row', equip: '2×10kg DB', cues: 'Flat back; pull to pockets; pause 1s' },
-          { name: 'Single-Arm DB Row', equip: '1×10kg DB', cues: 'Brace hard; elbow to hip; slow return' },
-          { name: 'Band Row', equip: 'Heavy band', cues: 'Squeeze shoulder blades; control return' },
-          { name: 'Band Face Pull', equip: 'Light band', cues: 'Pull to eyebrows; elbows high; 1s squeeze' },
-          { name: 'DB Hammer Curl', equip: '2×10kg DB', cues: 'Neutral grip; elbows pinned; slow eccentric' }
-        ],
-        push: [
-          { name: 'DB Strict Press', equip: '2×10kg DB', cues: 'Ribs down; glutes tight; smooth press' },
-          { name: 'DB Push Press', equip: '2×10kg DB', cues: 'Dip-drive; punch to lockout; no over-arch' },
-          { name: 'DB Floor Press', equip: '2×10kg DB', cues: 'Elbows ~45°; pause on floor; press fast' },
-          { name: 'Push-Ups', equip: 'Bodyweight', cues: 'Full-body tension; chest to floor; lock out' },
-          { name: 'DB Lateral Raise', equip: '2×5kg DB', cues: 'Raise to mid-chest; slow lower; no swing' },
-          { name: 'Band Triceps Pushdown', equip: 'Band', cues: 'Lock elbows; full extension; slow return' }
-        ],
         squat: [
           { name: 'DB Goblet Squat', equip: '1×10kg DB', cues: 'Elbows inside knees; full-foot pressure' },
           { name: 'DB Thruster', equip: '2×5kg DB', cues: 'Squat → drive overhead; steady breathing' },
-          { name: 'DB Reverse Lunge', equip: '2×5kg DB', cues: '10 total = 5/leg; step back softly' },
-          { name: 'DB Split Squat', equip: '2×5kg DB', cues: 'Control depth; knee tracks toes; upright torso' },
           { name: 'Band Squat', equip: 'Band', cues: 'Knees out; constant tension; full depth' },
           { name: 'Tempo Air Squat', equip: 'Bodyweight', cues: '3s down; 1s pause; stand tall' }
+        ],
+        lunge: [
+          { name: 'DB Reverse Lunge', equip: '2×5kg DB', cues: 'Step back softly; stay tall; alternate sides' },
+          { name: 'DB Split Squat', equip: '2×5kg DB', cues: 'Control depth; front heel heavy; upright torso' },
+          { name: 'Walking Lunge', equip: 'Bodyweight', cues: 'Long step; knee tracks toes; steady pace' },
+          { name: 'Lateral Lunge', equip: 'Bodyweight', cues: 'Sit into hip; other leg long; chest up' }
         ],
         hinge: [
           { name: 'DB Romanian Deadlift', equip: '2×10kg DB', cues: 'Hips back; lats on; feel hamstrings' },
           { name: 'DB Single-Leg RDL', equip: '1×10kg DB', cues: 'Square hips; reach long; control' },
           { name: 'Band Good Morning', equip: 'Heavy band', cues: 'Band at hips; hinge; squeeze glutes' },
-          { name: 'Glute Bridge', equip: 'Bodyweight', cues: 'Ribs down; full hip extension; pause' },
-          { name: 'DB Hang Clean', equip: '2×10kg DB', cues: 'Jump-shrug; fast elbows; soft catch' },
-          { name: 'Single-Arm DB Snatch', equip: '1×10kg DB', cues: 'Hip drive; DB close; punch overhead' }
+          { name: 'Glute Bridge', equip: 'Bodyweight', cues: 'Ribs down; full hip extension; pause' }
+        ],
+        push: [
+          { name: 'DB Strict Press', equip: '2×10kg DB', cues: 'Ribs down; glutes tight; smooth press' },
+          { name: 'DB Floor Press', equip: '2×10kg DB', cues: 'Elbows ~45°; pause on floor; press fast' },
+          { name: 'Push-Ups', equip: 'Bodyweight', cues: 'Full-body tension; chest to floor; lock out' },
+          { name: 'Band Triceps Pushdown', equip: 'Band', cues: 'Lock elbows; full extension; slow return' }
+        ],
+        pull: [
+          { name: 'Pull-Ups / Chin-Ups', equip: 'Pull-up bar', cues: 'Full hang; ribs down; controlled reps' },
+          { name: 'DB Bent-Over Row', equip: '2×10kg DB', cues: 'Flat back; pull to pockets; pause 1s' },
+          { name: 'Single-Arm DB Row', equip: '1×10kg DB', cues: 'Brace hard; elbow to hip; slow return' },
+          { name: 'Band Face Pull', equip: 'Light band', cues: 'Pull to eyebrows; elbows high; 1s squeeze' }
+        ],
+        carry: [
+          { name: 'Farmer Carry March', equip: '2×10kg DB', cues: 'Tall posture; slow march; brace hard' },
+          { name: 'Suitcase Carry March', equip: '1×10kg DB', cues: 'Stay square; avoid side bend; controlled steps' },
+          { name: 'Front Rack Carry March', equip: '2×5kg DB', cues: 'Elbows up; ribs down; smooth steps' },
+          { name: 'Overhead Carry March', equip: '2×5kg DB', cues: 'Lockout stable; slow feet; tight core' }
         ]
       };
 
+      const CATEGORY_POOL = ['squat', 'lunge', 'hinge', 'push', 'pull', 'carry'];
+
       function seededRandom(seed) {
+
+function seededRandom(seed) {
         const x = Math.sin(seed) * 10000;
         return x - Math.floor(x);
       }
@@ -373,21 +381,43 @@
         return out;
       }
 
+      function shuffleWithSeed(items, seedBase) {
+        const arr = [...items];
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(seededRandom(seedBase + i) * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+      }
+
+      function pickOne(category, seedBase, usedByCategory) {
+        const list = EXERCISE_LIBRARY[category];
+        const used = usedByCategory[category] || new Set();
+        let idx = Math.floor(seededRandom(seedBase) * list.length);
+        let attempts = 0;
+        while (used.has(idx) && attempts < list.length) {
+          idx = (idx + 1) % list.length;
+          attempts++;
+        }
+        used.add(idx);
+        usedByCategory[category] = used;
+        return { ...list[idx], category };
+      }
+
+      function buildSet(seedBase, usedByCategory) {
+        const order = shuffleWithSeed(CATEGORY_POOL, seedBase);
+        return order.map((category, i) => pickOne(category, seedBase + (i * 17), usedByCategory));
+      }
+
       function buildWorkout() {
-        const set1 = [
-          ...pickExercises('pull', 2, 1),
-          ...pickExercises('push', 2, 10),
-          ...pickExercises('squat', 1, 20),
-          ...pickExercises('hinge', 1, 30)
-        ];
-        const set2 = [
-          ...pickExercises('squat', 2, 40),
-          ...pickExercises('hinge', 2, 50),
-          ...pickExercises('pull', 1, 60),
-          ...pickExercises('push', 1, 70)
-        ];
+        const usedByCategory = {};
+        const seed = getTodaySeed() + Math.floor(Math.random() * 100000);
+        const set1 = buildSet(seed + 11, usedByCategory);
+        const set2 = [...set1];
+        const set3 = buildSet(seed + 97, usedByCategory);
+        const set4 = [...set3];
         return {
-          sets: [set1, set2, set1, set2],
+          sets: [set1, set2, set3, set4],
           names: ['Set 1', 'Set 2', 'Set 3', 'Set 4'],
           longRestAfterSet: [false, true, false, false]
         };
@@ -466,7 +496,7 @@
         closeSettings();
       }
 
-      const workout = buildWorkout();
+      let workout = buildWorkout();
       const state = {
         running: false,
         timerId: null,
@@ -609,10 +639,14 @@
 
       function tick() {
         if (state.timeLeft > 0) {
+          if (state.timeLeft <= 3) {
+            beep(700 + ((4 - state.timeLeft) * 120), 90);
+            buzz(60);
+          }
           state.timeLeft -= 1;
           updateTimer();
         } else {
-          beep(state.isWork ? 620 : 920, 150); buzz(120); advancePhase();
+          beep(state.isWork ? 620 : 920, 180); buzz(120); advancePhase();
         }
       }
 
@@ -660,6 +694,8 @@
 
       function resetWorkout() {
         stopTimer();
+        workout = buildWorkout();
+        renderWorkout();
         state.currentSet = 0;
         state.currentExercise = 0;
         state.isWork = true;
