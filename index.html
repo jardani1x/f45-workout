@@ -1,661 +1,574 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>F45 Workout</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <meta name="description" content="Simple production-ready F45-style interval workout timer" />
   <style>
     :root {
-      --bg: #000000;
-      --card: #1c1c1e;
-      --text: #ffffff;
-      --text-secondary: #8e8e93;
-      --accent: #0a84ff;
-      --accent-glow: rgba(10, 132, 255, 0.3);
-      --rest: #ff9f0a;
-      --rest-glow: rgba(255, 159, 10, 0.3);
-      --success: #30d158;
+      --bg: #0b0b0c;
+      --panel: #17181b;
+      --panel-2: #22242a;
+      --text: #f5f7fb;
+      --muted: #a2a8b3;
+      --blue: #3b82f6;
+      --orange: #f59e0b;
+      --green: #22c55e;
+      --red: #ef4444;
       --border: rgba(255,255,255,0.08);
+      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      --radius: 18px;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body { 
-      font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif; 
-      background: var(--bg); 
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
+    body {
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #090909 0%, #121318 100%);
       color: var(--text);
-      -webkit-font-smoothing: antialiased;
-      min-height: 100vh;
+      line-height: 1.45;
     }
-    
-    /* Timer Sticky Top */
-    .timer-container {
+
+    .app {
+      max-width: 840px;
+      margin: 0 auto;
+      padding: 20px 16px 80px;
+    }
+
+    .hero {
       position: sticky;
       top: 0;
-      background: rgba(0,0,0,0.85);
-      backdrop-filter: blur(40px);
-      -webkit-backdrop-filter: blur(40px);
-      padding: 28px 20px 32px;
+      z-index: 20;
+      backdrop-filter: blur(16px);
+      background: rgba(11, 11, 12, 0.88);
+      border-bottom: 1px solid var(--border);
+      margin: -20px -16px 18px;
+      padding: 20px 16px 18px;
+    }
+
+    .hero-inner {
+      max-width: 840px;
+      margin: 0 auto;
       text-align: center;
-      z-index: 1000;
-      border-bottom: 1px solid var(--border);
     }
-    .timer-inner { max-width: 400px; margin: 0 auto; }
-    
-    .phase-label { 
-      font-size: 13px; 
-      font-weight: 600;
-      text-transform: uppercase; 
-      letter-spacing: 3px;
+
+    .title {
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      font-weight: 700;
       margin-bottom: 8px;
-      transition: color 0.3s ease;
     }
-    .phase-work { color: var(--accent); }
-    .phase-rest { color: var(--rest); }
-    .phase-ready { color: var(--text-secondary); }
-    .phase-complete { color: var(--success); }
-    
-    .timer-display { 
-      font-size: 88px; 
-      font-weight: 300; 
-      font-variant-numeric: tabular-nums;
-      letter-spacing: -3px;
+
+    .phase {
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .phase.work { color: var(--blue); }
+    .phase.rest { color: var(--orange); }
+    .phase.complete { color: var(--green); }
+
+    .timer {
+      font-size: clamp(3rem, 10vw, 5.5rem);
+      font-weight: 300;
+      letter-spacing: -0.04em;
       line-height: 1;
-      transition: color 0.3s ease;
+      font-variant-numeric: tabular-nums;
     }
-    .timer-work { color: var(--text); text-shadow: 0 0 60px var(--accent-glow); }
-    .timer-rest { color: var(--rest); text-shadow: 0 0 60px var(--rest-glow); }
-    
-    .timer-sub { 
-      font-size: 14px; 
-      color: var(--text-secondary); 
-      margin-top: 8px;
+
+    .status {
+      color: var(--muted);
+      margin-top: 10px;
+      min-height: 24px;
+      font-size: 0.98rem;
     }
-    
+
     .progress-track {
-      height: 3px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 2px;
-      margin: 20px auto 0;
-      max-width: 300px;
+      width: min(420px, 100%);
+      margin: 16px auto 0;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
       overflow: hidden;
     }
+
     .progress-bar {
-      height: 100%;
-      background: var(--accent);
-      border-radius: 2px;
-      transition: width 0.3s linear;
       width: 0%;
+      height: 100%;
+      background: var(--blue);
+      transition: width 0.25s linear;
     }
-    .progress-bar.rest { background: var(--rest); }
-    
-    .controls { 
-      display: flex; 
-      gap: 12px; 
-      justify-content: center; 
-      margin-top: 24px; 
+    .progress-bar.rest { background: var(--orange); }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 18px;
+      flex-wrap: wrap;
     }
+
     button {
-      padding: 16px 36px;
-      font-size: 17px;
-      font-weight: 500;
-      border: none;
+      border: 0;
       border-radius: 14px;
+      padding: 14px 22px;
       cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      -webkit-tap-highlight-color: transparent;
-      font-family: inherit;
+      font-weight: 700;
+      font-size: 1rem;
+      transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
     }
-    .btn-start { 
-      background: var(--accent); 
-      color: #fff; 
-      min-width: 120px;
-      box-shadow: 0 4px 20px var(--accent-glow);
+    button:hover { opacity: 0.95; }
+    button:active { transform: scale(0.98); }
+
+    .primary { background: var(--blue); color: white; }
+    .secondary { background: var(--panel-2); color: var(--text); }
+    .ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+
+    .card {
+      background: rgba(23, 24, 27, 0.95);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
     }
-    .btn-start:hover { background: #3395ff; }
-    .btn-start:active { transform: scale(0.97); }
-    .btn-start.pause { background: var(--card); }
-    .btn-reset { 
-      background: rgba(142,142,147,0.15); 
-      color: var(--text); 
-    }
-    .btn-reset:hover { background: rgba(142,142,147,0.25); }
-    
-    .workout-container { 
-      max-width: 480px; 
-      margin: 0 auto; 
-      padding: 24px 20px 100px;
-    }
-    
-    .set-section { 
-      margin-bottom: 36px;
-      animation: fadeInUp 0.5s ease forwards;
-      opacity: 1;
-    }
-    .set-section:nth-child(1) { animation-delay: 0.1s; }
-    .set-section:nth-child(2) { animation-delay: 0.2s; }
-    .set-section:nth-child(3) { animation-delay: 0.3s; }
-    .set-section:nth-child(4) { animation-delay: 0.4s; }
-    
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .set-header { 
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border);
-    }
-    .set-title { font-size: 24px; font-weight: 600; }
-    .set-badge {
-      font-size: 12px;
-      font-weight: 600;
-      padding: 6px 12px;
-      border-radius: 8px;
-      text-transform: uppercase;
-    }
-    .badge-workout {
-      background: rgba(10,132,255,0.15);
-      color: var(--accent);
-    }
-    .badge-rest {
-      background: rgba(255,159,10,0.15);
-      color: var(--rest);
-    }
-    
-    .exercise-item {
-      background: var(--card);
-      border-radius: 18px;
-      padding: 20px;
-      margin-bottom: 12px;
-      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-      border: 1.5px solid transparent;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .exercise-item::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 3px;
-      background: var(--accent);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    
-    .exercise-item.current {
-      border-color: var(--accent);
-      background: rgba(10,132,255,0.06);
-      transform: translateX(4px);
-    }
-    .exercise-item.current::before { opacity: 1; }
-    
-    .exercise-item.done {
-      opacity: 0.35;
-      transform: scale(0.98);
-    }
-    
-    .exercise-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 8px;
-    }
-    .exercise-num {
-      width: 26px;
-      height: 26px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-secondary);
-    }
-    .exercise-item.current .exercise-num {
-      background: var(--accent);
-      color: #fff;
-    }
-    .exercise-item.done .exercise-num {
-      background: var(--success);
-      color: #fff;
-    }
-    
-    .exercise-name { font-size: 18px; font-weight: 500; }
-    
-    .exercise-details { padding-left: 36px; }
-    .exercise-equip { 
-      color: var(--accent);
-      font-size: 14px;
-      font-weight: 500;
-      margin-bottom: 4px;
-    }
-    .exercise-cues { 
-      color: var(--text-secondary);
-      font-size: 14px;
-      line-height: 1.5;
-    }
-    
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.08); }
-    }
-    .pulse { animation: pulse 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-    
-    .complete-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.95);
+
+    .next-up {
+      padding: 16px;
+      margin-bottom: 18px;
       display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.5s ease;
     }
-    .complete-overlay.show {
-      display: flex;
-      opacity: 1;
-      pointer-events: all;
-    }
-    .complete-icon { font-size: 80px; margin-bottom: 24px; }
-    .complete-text {
-      font-size: 36px;
-      font-weight: 600;
-      color: var(--success);
-      margin-bottom: 12px;
-    }
-    .complete-sub {
-      font-size: 17px;
-      color: var(--text-secondary);
-      margin-bottom: 40px;
-    }
-    .btn-done { background: var(--success); color: #000; }
-    
-    /* Next Exercise Card */
-    .next-up-card {
-      background: linear-gradient(135deg, rgba(10, 132, 255, 0.15), rgba(10, 132, 255, 0.05));
-      border: 1.5px solid var(--accent);
-      border-radius: 20px;
-      padding: 20px;
-      margin: 0 20px 24px;
-      display: none;
-      animation: fadeInUp 0.4s ease;
-    }
-    .next-up-card.show {
-      display: block;
-    }
+    .next-up.show { display: block; }
     .next-up-label {
-      font-size: 11px;
-      font-weight: 600;
+      font-size: 0.78rem;
       text-transform: uppercase;
-      letter-spacing: 2px;
-      color: var(--accent);
+      letter-spacing: 0.16em;
+      color: var(--orange);
+      font-weight: 700;
       margin-bottom: 8px;
     }
-    .next-up-name {
-      font-size: 22px;
-      font-weight: 600;
+    .next-up-name { font-size: 1.05rem; font-weight: 700; margin-bottom: 4px; }
+    .next-up-meta { color: var(--muted); font-size: 0.92rem; }
+
+    .section {
+      margin-top: 18px;
+      padding: 18px;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .section-title { font-size: 1.15rem; font-weight: 700; }
+    .section-badge {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(59,130,246,0.12);
+      color: #8fc0ff;
+      font-weight: 700;
+    }
+
+    .exercise-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .exercise {
+      background: var(--panel-2);
+      border: 1px solid transparent;
+      border-radius: 16px;
+      padding: 14px;
+    }
+    .exercise.current {
+      border-color: rgba(59,130,246,0.8);
+      background: rgba(59,130,246,0.10);
+    }
+    .exercise.done {
+      opacity: 0.45;
+    }
+
+    .exercise-top {
+      display: flex;
+      gap: 10px;
+      align-items: center;
       margin-bottom: 6px;
     }
-    .next-up-equip {
-      font-size: 14px;
-      color: var(--accent);
-      font-weight: 500;
+    .exercise-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,0.08);
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+      flex: 0 0 auto;
     }
-    .next-up-cues {
-      font-size: 14px;
-      color: var(--text-secondary);
-      margin-top: 8px;
-      font-style: italic;
+    .exercise.current .exercise-num {
+      background: var(--blue);
+      color: white;
+    }
+    .exercise-name { font-weight: 700; }
+    .exercise-equip { color: #95bfff; font-size: 0.92rem; margin-left: 38px; }
+    .exercise-cues { color: var(--muted); font-size: 0.92rem; margin-left: 38px; margin-top: 3px; }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.82);
+      z-index: 50;
+      padding: 20px;
+    }
+    .overlay.show { display: flex; }
+
+    .complete-box {
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      padding: 26px;
+    }
+    .complete-icon { font-size: 3rem; margin-bottom: 12px; }
+    .complete-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 8px; }
+    .complete-sub { color: var(--muted); margin-bottom: 18px; }
+
+    .footer-note {
+      text-align: center;
+      color: var(--muted);
+      margin-top: 18px;
+      font-size: 0.9rem;
     }
   </style>
 </head>
 <body>
-  <div class="timer-container">
-    <div class="timer-inner">
-      <div class="phase-label phase-ready" id="phase">READY</div>
-      <div class="timer-display timer-work" id="timer">00:40</div>
-      <div class="timer-sub" id="round">Round 1/4 • Exercise 1/6</div>
-      
-      <div class="progress-track">
-        <div class="progress-bar" id="progress"></div>
+  <div class="app">
+    <header class="hero">
+      <div class="hero-inner">
+        <div class="title">F45 Workout</div>
+        <div id="phase" class="phase">Ready</div>
+        <div id="timer" class="timer">00:40</div>
+        <div id="status" class="status">Round 1/4 • Exercise 1/6</div>
+        <div class="progress-track"><div id="progress" class="progress-bar"></div></div>
+        <div class="controls">
+          <button id="startBtn" class="primary">Start</button>
+          <button id="resetBtn" class="secondary">Reset</button>
+        </div>
       </div>
-      
-      <div class="controls">
-        <button class="btn-start" id="startBtn">Start</button>
-        <button class="btn-reset" id="resetBtn">Reset</button>
-      </div>
+    </header>
+
+    <section id="nextUpCard" class="card next-up">
+      <div class="next-up-label">Coming Up Next</div>
+      <div id="nextUpName" class="next-up-name"></div>
+      <div id="nextUpMeta" class="next-up-meta"></div>
+    </section>
+
+    <main id="workoutRoot"></main>
+    <div class="footer-note">Production build • static single-file app</div>
+  </div>
+
+  <div id="completeOverlay" class="overlay">
+    <div class="card complete-box">
+      <div class="complete-icon">🎉</div>
+      <div class="complete-title">Workout Complete!</div>
+      <div class="complete-sub">Great job finishing today’s session.</div>
+      <button id="doneBtn" class="primary">Done</button>
     </div>
-  </div>
-  
-  <!-- Next Up Card - shown during rest -->
-  <div class="next-up-card" id="nextUpCard">
-    <div class="next-up-label">Coming Up Next</div>
-    <div class="next-up-name" id="nextUpName"></div>
-    <div class="next-up-equip" id="nextUpEquip"></div>
-    <div class="next-up-cues" id="nextUpCues"></div>
-  </div>
-  
-  <div class="workout-container" id="workoutList"></div>
-  
-  <div class="complete-overlay" id="completeOverlay">
-    <div class="complete-icon">🎉</div>
-    <div class="complete-text">Workout Complete!</div>
-    <div class="complete-sub">Great job finishing today's session</div>
-    <button class="btn-start btn-done" id="doneBtn">Done</button>
   </div>
 
   <script>
-    const EXERCISE_LIBRARY = {
-      pull: [
-        { name: "Pull-Ups / Chin-Ups", equip: "Pull-up bar", cues: "Full hang; ribs down; controlled reps" },
-        { name: "DB Bent-Over Row", equip: "2×10kg DB", cues: "Flat back; pull to pockets; pause 1s" },
-        { name: "Single-Arm DB Row", equip: "1×10kg DB", cues: "Brace hard; elbow to hip; slow return" },
-        { name: "Band Row", equip: "Heavy band", cues: "Squeeze shoulder blades; control return" },
-        { name: "Band Face Pull", equip: "Light band", cues: "Pull to eyebrows; elbows high; 1s squeeze" },
-        { name: "DB Hammer Curl", equip: "2×10kg DB", cues: "Neutral grip; elbows pinned; slow eccentric" }
-      ],
-      push: [
-        { name: "DB Strict Press", equip: "2×10kg DB", cues: "Ribs down; glutes tight; smooth press" },
-        { name: "DB Push Press", equip: "2×10kg DB", cues: "Dip-drive; punch to lockout; no over-arch" },
-        { name: "DB Floor Press", equip: "2×10kg DB", cues: "Elbows ~45°; pause on floor; press fast" },
-        { name: "Push-Ups", equip: "Bodyweight", cues: "Full-body tension; chest to floor; lock out" },
-        { name: "DB Lateral Raise", equip: "2×5kg DB", cues: "Raise to mid-chest; slow lower; no swing" },
-        { name: "Band Triceps Pushdown", equip: "Band", cues: "Lock elbows; full extension; slow return" }
-      ],
-      squat: [
-        { name: "DB Goblet Squat", equip: "1×10kg DB", cues: "Elbows inside knees; full-foot pressure" },
-        { name: "DB Thruster", equip: "2×5kg DB", cues: "Squat → drive overhead; steady breathing" },
-        { name: "DB Reverse Lunge", equip: "2×5kg DB", cues: "10 total = 5/leg; step back softly" },
-        { name: "DB Split Squat", equip: "2×5kg DB", cues: "Control depth; knee tracks toes; upright torso" },
-        { name: "Band Squat", equip: "Band", cues: "Knees out; constant tension; full depth" },
-        { name: "Tempo Air Squat", equip: "Bodyweight", cues: "3s down; 1s pause; stand tall" }
-      ],
-      hinge: [
-        { name: "DB Romanian Deadlift", equip: "2×10kg DB", cues: "Hips back; lats on; feel hamstrings" },
-        { name: "DB Single-Leg RDL", equip: "1×10kg DB", cues: "Square hips; reach long; control" },
-        { name: "Band Good Morning", equip: "Heavy band", cues: "Band at hips; hinge; squeeze glutes" },
-        { name: "Glute Bridge", equip: "Bodyweight", cues: "Ribs down; full hip extension; pause" },
-        { name: "DB Hang Clean", equip: "2×10kg DB", cues: "Jump-shrug; fast elbows; soft catch" },
-        { name: "Single-Arm DB Snatch", equip: "1×10kg DB", cues: "Hip drive; DB close; punch overhead" }
-      ]
-    };
-    
-    const seededRandom = (seed) => {
-      const x = Math.sin(seed) * 10000;
-      return x - Math.floor(x);
-    };
-    
-    const today = new Date().toISOString().slice(0, 10);
-    const seed = today.split('-').join('');
-    
-    function getRandomExercises(category, count, seedOffset) {
-      const exercises = EXERCISE_LIBRARY[category];
-      const result = [];
-      const used = new Set();
-      for (let i = 0; i < count; i++) {
-        let idx = Math.floor(seededRandom(seed + seedOffset + i) * exercises.length);
-        while (used.has(idx) && used.size < exercises.length) {
-          idx = (idx + 1) % exercises.length;
-        }
-        used.add(idx);
-        result.push(exercises[idx]);
+    (function () {
+      'use strict';
+
+      const WORK_TIME = 40;
+      const REST_TIME = 20;
+      const LONG_REST_TIME = 120;
+
+      const EXERCISE_LIBRARY = {
+        pull: [
+          { name: 'Pull-Ups / Chin-Ups', equip: 'Pull-up bar', cues: 'Full hang; ribs down; controlled reps' },
+          { name: 'DB Bent-Over Row', equip: '2×10kg DB', cues: 'Flat back; pull to pockets; pause 1s' },
+          { name: 'Single-Arm DB Row', equip: '1×10kg DB', cues: 'Brace hard; elbow to hip; slow return' },
+          { name: 'Band Row', equip: 'Heavy band', cues: 'Squeeze shoulder blades; control return' },
+          { name: 'Band Face Pull', equip: 'Light band', cues: 'Pull to eyebrows; elbows high; 1s squeeze' },
+          { name: 'DB Hammer Curl', equip: '2×10kg DB', cues: 'Neutral grip; elbows pinned; slow eccentric' }
+        ],
+        push: [
+          { name: 'DB Strict Press', equip: '2×10kg DB', cues: 'Ribs down; glutes tight; smooth press' },
+          { name: 'DB Push Press', equip: '2×10kg DB', cues: 'Dip-drive; punch to lockout; no over-arch' },
+          { name: 'DB Floor Press', equip: '2×10kg DB', cues: 'Elbows ~45°; pause on floor; press fast' },
+          { name: 'Push-Ups', equip: 'Bodyweight', cues: 'Full-body tension; chest to floor; lock out' },
+          { name: 'DB Lateral Raise', equip: '2×5kg DB', cues: 'Raise to mid-chest; slow lower; no swing' },
+          { name: 'Band Triceps Pushdown', equip: 'Band', cues: 'Lock elbows; full extension; slow return' }
+        ],
+        squat: [
+          { name: 'DB Goblet Squat', equip: '1×10kg DB', cues: 'Elbows inside knees; full-foot pressure' },
+          { name: 'DB Thruster', equip: '2×5kg DB', cues: 'Squat → drive overhead; steady breathing' },
+          { name: 'DB Reverse Lunge', equip: '2×5kg DB', cues: '10 total = 5/leg; step back softly' },
+          { name: 'DB Split Squat', equip: '2×5kg DB', cues: 'Control depth; knee tracks toes; upright torso' },
+          { name: 'Band Squat', equip: 'Band', cues: 'Knees out; constant tension; full depth' },
+          { name: 'Tempo Air Squat', equip: 'Bodyweight', cues: '3s down; 1s pause; stand tall' }
+        ],
+        hinge: [
+          { name: 'DB Romanian Deadlift', equip: '2×10kg DB', cues: 'Hips back; lats on; feel hamstrings' },
+          { name: 'DB Single-Leg RDL', equip: '1×10kg DB', cues: 'Square hips; reach long; control' },
+          { name: 'Band Good Morning', equip: 'Heavy band', cues: 'Band at hips; hinge; squeeze glutes' },
+          { name: 'Glute Bridge', equip: 'Bodyweight', cues: 'Ribs down; full hip extension; pause' },
+          { name: 'DB Hang Clean', equip: '2×10kg DB', cues: 'Jump-shrug; fast elbows; soft catch' },
+          { name: 'Single-Arm DB Snatch', equip: '1×10kg DB', cues: 'Hip drive; DB close; punch overhead' }
+        ]
+      };
+
+      function seededRandom(seed) {
+        const x = Math.sin(seed) * 10000;
+        return x - Math.floor(x);
       }
-      return result;
-    }
-    
-    const set1 = [
-      ...getRandomExercises('pull', 2, 1),
-      ...getRandomExercises('push', 2, 10),
-      ...getRandomExercises('squat', 1, 20),
-      ...getRandomExercises('hinge', 1, 30)
-    ];
-    
-    const set2 = [
-      ...getRandomExercises('squat', 2, 40),
-      ...getRandomExercises('hinge', 2, 50),
-      ...getRandomExercises('pull', 1, 60),
-      ...getRandomExercises('push', 1, 70)
-    ];
-    
-    const workout = [set1, set2, set1, set2];
-    const setNames = ['Set 1', 'Set 2', 'Set 1', 'Set 2'];
-    const isAfterRest = [false, false, true, false];
-    
-    function renderWorkout() {
-      const container = document.getElementById('workoutList');
-      let html = '';
-      
-      workout.forEach((set, setIdx) => {
-        html += `<div class="set-section" id="set-${setIdx}">
-          <div class="set-header">
-            <div class="set-title">${setNames[setIdx]}</div>
-            ${isAfterRest[setIdx] ? '<div class="set-badge badge-rest">2 min rest after</div>' : '<div class="set-badge badge-workout">6 exercises</div>'}
-          </div>`;
-        
-        set.forEach((ex, idx) => {
-          html += `<div class="exercise-item" data-set="${setIdx}" data-index="${idx}">
-            <div class="exercise-header">
-              <div class="exercise-num">${idx + 1}</div>
-              <div class="exercise-name">${ex.name}</div>
+
+      function getTodaySeed() {
+        return Number(new Date().toISOString().slice(0, 10).replaceAll('-', ''));
+      }
+
+      function pickExercises(category, count, offset) {
+        const list = EXERCISE_LIBRARY[category];
+        const used = new Set();
+        const seed = getTodaySeed();
+        const out = [];
+        for (let i = 0; i < count; i++) {
+          let idx = Math.floor(seededRandom(seed + offset + i) * list.length);
+          while (used.has(idx) && used.size < list.length) idx = (idx + 1) % list.length;
+          used.add(idx);
+          out.push(list[idx]);
+        }
+        return out;
+      }
+
+      function buildWorkout() {
+        const set1 = [
+          ...pickExercises('pull', 2, 1),
+          ...pickExercises('push', 2, 10),
+          ...pickExercises('squat', 1, 20),
+          ...pickExercises('hinge', 1, 30)
+        ];
+        const set2 = [
+          ...pickExercises('squat', 2, 40),
+          ...pickExercises('hinge', 2, 50),
+          ...pickExercises('pull', 1, 60),
+          ...pickExercises('push', 1, 70)
+        ];
+        return {
+          sets: [set1, set2, set1, set2],
+          names: ['Set 1', 'Set 2', 'Set 3', 'Set 4'],
+          longRestAfterSet: [false, true, false, false]
+        };
+      }
+
+      const els = {
+        phase: document.getElementById('phase'),
+        timer: document.getElementById('timer'),
+        status: document.getElementById('status'),
+        progress: document.getElementById('progress'),
+        startBtn: document.getElementById('startBtn'),
+        resetBtn: document.getElementById('resetBtn'),
+        doneBtn: document.getElementById('doneBtn'),
+        nextUpCard: document.getElementById('nextUpCard'),
+        nextUpName: document.getElementById('nextUpName'),
+        nextUpMeta: document.getElementById('nextUpMeta'),
+        workoutRoot: document.getElementById('workoutRoot'),
+        completeOverlay: document.getElementById('completeOverlay')
+      };
+
+      const workout = buildWorkout();
+      const state = {
+        running: false,
+        timerId: null,
+        currentSet: 0,
+        currentExercise: 0,
+        isWork: true,
+        timeLeft: WORK_TIME
+      };
+
+      function renderWorkout() {
+        els.workoutRoot.innerHTML = workout.sets.map((set, setIdx) => `
+          <section class="card section" id="set-${setIdx}">
+            <div class="section-head">
+              <div class="section-title">${workout.names[setIdx]}</div>
+              <div class="section-badge">${workout.longRestAfterSet[setIdx] ? 'Long rest after set' : '6 exercises'}</div>
             </div>
-            <div class="exercise-details">
-              <div class="exercise-equip">${ex.equip}</div>
-              <div class="exercise-cues">${ex.cues}</div>
+            <div class="exercise-list">
+              ${set.map((ex, idx) => `
+                <article class="exercise" data-set="${setIdx}" data-index="${idx}">
+                  <div class="exercise-top">
+                    <div class="exercise-num">${idx + 1}</div>
+                    <div class="exercise-name">${ex.name}</div>
+                  </div>
+                  <div class="exercise-equip">${ex.equip}</div>
+                  <div class="exercise-cues">${ex.cues}</div>
+                </article>
+              `).join('')}
             </div>
-          </div>`;
+          </section>
+        `).join('');
+      }
+
+      function getDisplayTarget() {
+        if (state.isWork) return { set: state.currentSet, exercise: state.currentExercise };
+        let nextSet = state.currentSet;
+        let nextExercise = state.currentExercise + 1;
+        if (nextExercise >= 6) {
+          nextExercise = 0;
+          nextSet += 1;
+        }
+        return { set: nextSet, exercise: nextExercise };
+      }
+
+      function updateExerciseStates() {
+        document.querySelectorAll('.exercise').forEach((node) => {
+          const setIdx = Number(node.dataset.set);
+          const exIdx = Number(node.dataset.index);
+          node.classList.remove('current', 'done');
+          if (setIdx < state.currentSet || (setIdx === state.currentSet && exIdx < state.currentExercise)) {
+            node.classList.add('done');
+          }
         });
-        
-        html += '</div>';
-      });
-      
-      container.innerHTML = html;
-    }
-    
-    let timerInterval;
-    let currentRound = 0;
-    let currentExercise = 0;
-    let isWork = true;
-    let timeLeft = WORK_TIME;
-    let isRunning = false;
-    
-    const WORK_TIME = 40;
-    const REST_TIME = 20;
-    const LONG_REST_TIME = 120;
-    
-    function updateDisplay() {
-      const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-      const secs = (timeLeft % 60).toString().padStart(2, '0');
-      document.getElementById('timer').textContent = `${mins}:${secs}`;
-      
-      const phase = document.getElementById('phase');
-      const timerEl = document.getElementById('timer');
-      const progressBar = document.getElementById('progress');
-      
-      if (isWork) {
-        phase.textContent = 'WORK';
-        phase.className = 'phase-label phase-work';
-        timerEl.className = 'timer-display timer-work';
-      } else {
-        phase.textContent = 'REST';
-        phase.className = 'phase-label phase-rest';
-        timerEl.className = 'timer-display timer-rest';
+        const target = getDisplayTarget();
+        const current = document.querySelector(`.exercise[data-set="${target.set}"][data-index="${target.exercise}"]`);
+        if (current) current.classList.add('current');
       }
-      
-      const totalTime = isWork ? WORK_TIME : (isAfterRest[currentRound] ? LONG_REST_TIME : REST_TIME);
-      const progress = ((totalTime - timeLeft) / totalTime) * 100;
-      progressBar.style.width = progress + '%';
-      progressBar.className = 'progress-bar' + (isWork ? '' : ' rest');
-      
-      document.querySelectorAll('.exercise-item').forEach(el => {
-        el.classList.remove('current', 'done');
-        const setIdx = parseInt(el.dataset.set);
-        const idx = parseInt(el.dataset.index);
-        if (setIdx < currentRound || (setIdx === currentRound && idx < currentExercise)) {
-          el.classList.add('done');
+
+      function updateNextUp() {
+        if (state.isWork) {
+          els.nextUpCard.classList.remove('show');
+          return;
         }
-      });
-      
-      // During REST, show the NEXT exercise; during WORK, show current
-      let displayRound = currentRound;
-      let displayExercise = currentExercise;
-      
-      // Next Up card logic
-      const nextUpCard = document.getElementById('nextUpCard');
-      if (!isWork) {
-        // Calculate next exercise
-        let nextR = currentRound;
-        let nextE = currentExercise + 1;
-        if (nextE > 5) {
-          nextE = 0;
-          nextR = currentRound + 1;
+        const target = getDisplayTarget();
+        const ex = workout.sets[target.set]?.[target.exercise];
+        if (!ex) {
+          els.nextUpCard.classList.remove('show');
+          return;
         }
-        
-        // Don't show if we're at the very end
-        if (nextR < 4) {
-          const nextEx = workout[nextR][nextE];
-          document.getElementById('nextUpName').textContent = nextEx.name;
-          document.getElementById('nextUpEquip').textContent = nextEx.equip;
-          document.getElementById('nextUpCues').textContent = nextEx.cues;
-          nextUpCard.classList.add('show');
+        els.nextUpName.textContent = ex.name;
+        els.nextUpMeta.textContent = `${ex.equip} • ${ex.cues}`;
+        els.nextUpCard.classList.add('show');
+      }
+
+      function updateStatus() {
+        const target = getDisplayTarget();
+        const ex = workout.sets[target.set]?.[target.exercise];
+        const label = state.isWork ? 'WORK' : 'REST';
+        els.phase.textContent = label;
+        els.phase.className = `phase ${state.isWork ? 'work' : 'rest'}`;
+        if (ex) {
+          els.status.textContent = `Round ${target.set + 1}/4 • Exercise ${target.exercise + 1}/6 • ${ex.name}`;
         } else {
-          nextUpCard.classList.remove('show');
-        }
-      } else {
-        nextUpCard.classList.remove('show');
-      }
-      
-      if (!isWork) {
-        // Show next exercise during rest
-        if (currentExercise < 5) {
-          displayExercise = currentExercise + 1;
-        } else {
-          // Last exercise of set - show first of next round
-          displayRound = currentRound + 1;
-          displayExercise = 0;
+          els.status.textContent = 'Workout complete';
         }
       }
-      
-      const displayEx = workout[displayRound]?.[displayExercise];
-      if (displayEx) {
-        document.getElementById('round').textContent = `Round ${displayRound + 1}/4 • Exercise ${displayExercise + 1}/6 • ${displayEx.name} — ${displayEx.cues}`;
-      } else {
-        document.getElementById('round').textContent = `Round ${currentRound + 1}/4 • Exercise ${currentExercise + 1}/6`;
+
+      function updateTimer() {
+        const mins = String(Math.floor(state.timeLeft / 60)).padStart(2, '0');
+        const secs = String(state.timeLeft % 60).padStart(2, '0');
+        els.timer.textContent = `${mins}:${secs}`;
+        const total = state.isWork ? WORK_TIME : (workout.longRestAfterSet[state.currentSet] && state.currentExercise === 5 ? LONG_REST_TIME : REST_TIME);
+        const progress = ((total - state.timeLeft) / total) * 100;
+        els.progress.style.width = `${Math.max(0, Math.min(100, progress))}%`;
+        els.progress.className = `progress-bar${state.isWork ? '' : ' rest'}`;
       }
-      
-      const currentEl = document.querySelector(`.exercise-item[data-set="${displayRound}"][data-index="${displayExercise}"]`);
-      if (currentEl) {
-        currentEl.classList.add('current');
+
+      function renderAll() {
+        updateStatus();
+        updateTimer();
+        updateExerciseStates();
+        updateNextUp();
       }
-    }
-    
-    function tick() {
-      if (timeLeft > 0) {
-        timeLeft--;
-        updateDisplay();
-      } else {
-        if (isWork) {
-          const isLastExercise = currentExercise === 5;
-          const needsLongRest = isAfterRest[currentRound];
-          
-          if (isLastExercise && currentRound === 3) {
-            stopWorkout();
-            showComplete();
+
+      function stopTimer() {
+        state.running = false;
+        if (state.timerId) clearInterval(state.timerId);
+        state.timerId = null;
+        els.startBtn.textContent = 'Start';
+      }
+
+      function completeWorkout() {
+        stopTimer();
+        els.phase.textContent = 'COMPLETE';
+        els.phase.className = 'phase complete';
+        els.completeOverlay.classList.add('show');
+      }
+
+      function advancePhase() {
+        if (state.isWork) {
+          const lastExercise = state.currentExercise === 5;
+          const lastSet = state.currentSet === 3;
+          if (lastExercise && lastSet) {
+            completeWorkout();
             return;
-          } else if (isLastExercise && !needsLongRest) {
-            isWork = false;
-            timeLeft = LONG_REST_TIME;
-          } else {
-            isWork = false;
-            timeLeft = REST_TIME;
           }
+          state.isWork = false;
+          state.timeLeft = lastExercise && workout.longRestAfterSet[state.currentSet] ? LONG_REST_TIME : REST_TIME;
         } else {
-          isWork = true;
-          
-          if (currentExercise < 5) {
-            currentExercise++;
-            timeLeft = WORK_TIME;
+          state.isWork = true;
+          if (state.currentExercise < 5) {
+            state.currentExercise += 1;
           } else {
-            currentRound++;
-            currentExercise = 0;
-            timeLeft = WORK_TIME;
+            state.currentExercise = 0;
+            state.currentSet += 1;
           }
+          state.timeLeft = WORK_TIME;
         }
-        
-        const timer = document.getElementById('timer');
-        timer.classList.remove('pulse');
-        void timer.offsetWidth;
-        timer.classList.add('pulse');
-        
-        updateDisplay();
+        renderAll();
       }
-    }
-    
-    function toggleWorkout() {
-      if (isRunning) {
-        stopWorkout();
-        document.getElementById('startBtn').textContent = 'Resume';
-        document.getElementById('startBtn').classList.remove('pause');
-      } else {
-        isRunning = true;
-        document.getElementById('startBtn').textContent = 'Pause';
-        document.getElementById('startBtn').classList.add('pause');
-        timerInterval = setInterval(tick, 1000);
+
+      function tick() {
+        if (state.timeLeft > 0) {
+          state.timeLeft -= 1;
+          updateTimer();
+        } else {
+          advancePhase();
+        }
       }
-    }
-    
-    function stopWorkout() {
-      isRunning = false;
-      clearInterval(timerInterval);
-    }
-    
-    function resetWorkout() {
-      stopWorkout();
-      currentRound = 0;
-      currentExercise = 0;
-      isWork = true;
-      timeLeft = WORK_TIME;
-      document.getElementById('phase').textContent = 'READY';
-      document.getElementById('phase').className = 'phase-label phase-ready';
-      document.getElementById('timer').className = 'timer-display timer-work';
-      document.getElementById('startBtn').textContent = 'Start';
-      document.getElementById('startBtn').classList.remove('pause');
-      document.getElementById('progress').style.width = '0%';
-      document.getElementById('nextUpCard').classList.remove('show');
-      document.querySelectorAll('.exercise-item').forEach(el => el.classList.remove('current', 'done'));
-      updateDisplay();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    
-    function showComplete() {
-      document.getElementById('phase').textContent = 'COMPLETE';
-      document.getElementById('phase').className = 'phase-label phase-complete';
-      document.getElementById('completeOverlay').classList.add('show');
-    }
-    
-    function closeComplete() {
-      document.getElementById('completeOverlay').classList.remove('show');
-      resetWorkout();
-    }
-    
-    document.getElementById('startBtn').addEventListener('click', toggleWorkout);
-    document.getElementById('resetBtn').addEventListener('click', resetWorkout);
-    document.getElementById('doneBtn').addEventListener('click', closeComplete);
-    renderWorkout();
-    updateDisplay();
+
+      function toggleStart() {
+        if (state.running) {
+          stopTimer();
+          els.startBtn.textContent = 'Resume';
+          return;
+        }
+        state.running = true;
+        els.startBtn.textContent = 'Pause';
+        state.timerId = setInterval(tick, 1000);
+      }
+
+      function resetWorkout() {
+        stopTimer();
+        state.currentSet = 0;
+        state.currentExercise = 0;
+        state.isWork = true;
+        state.timeLeft = WORK_TIME;
+        els.completeOverlay.classList.remove('show');
+        renderAll();
+      }
+
+      els.startBtn.addEventListener('click', toggleStart);
+      els.resetBtn.addEventListener('click', resetWorkout);
+      els.doneBtn.addEventListener('click', () => {
+        els.completeOverlay.classList.remove('show');
+        resetWorkout();
+      });
+
+      renderWorkout();
+      renderAll();
+    })();
   </script>
 </body>
 </html>
