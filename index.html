@@ -452,9 +452,9 @@ function seededRandom(seed) {
 
       const audioCtx = window.AudioContext ? new AudioContext() : null;
       const prefs = JSON.parse(localStorage.getItem('f45Prefs') || '{"sound":true,"vibrate":false,"work":40,"rest":20,"longRest":120}');
-      WORK_TIME = Number(prefs.work || 40);
-      REST_TIME = Number(prefs.rest || 20);
-      LONG_REST_TIME = Number(prefs.longRest || 120);
+      let WORK_TIME = Number(prefs.work || 40);
+      let REST_TIME = Number(prefs.rest || 20);
+      let LONG_REST_TIME = Number(prefs.longRest || 120);
 
       function beep(freq = 880, duration = 120) {
         if (!prefs.sound || !audioCtx) return;
