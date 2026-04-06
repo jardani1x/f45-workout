@@ -312,45 +312,45 @@
       'use strict';
 
       const EXERCISE_LIBRARY = {
-        squat: [
-          { name: 'DB Goblet Squat', equip: '1×10kg DB', cues: 'Elbows inside knees; full-foot pressure' },
-          { name: 'DB Thruster', equip: '2×5kg DB', cues: 'Squat → drive overhead; steady breathing' },
-          { name: 'Band Squat', equip: 'Band', cues: 'Knees out; constant tension; full depth' },
-          { name: 'Tempo Air Squat', equip: 'Bodyweight', cues: '3s down; 1s pause; stand tall' }
-        ],
-        lunge: [
-          { name: 'DB Reverse Lunge', equip: '2×5kg DB', cues: 'Step back softly; stay tall; alternate sides' },
-          { name: 'DB Split Squat', equip: '2×5kg DB', cues: 'Control depth; front heel heavy; upright torso' },
-          { name: 'Walking Lunge', equip: 'Bodyweight', cues: 'Long step; knee tracks toes; steady pace' },
-          { name: 'Lateral Lunge', equip: 'Bodyweight', cues: 'Sit into hip; other leg long; chest up' }
-        ],
-        hinge: [
-          { name: 'DB Romanian Deadlift', equip: '2×10kg DB', cues: 'Hips back; lats on; feel hamstrings' },
-          { name: 'DB Single-Leg RDL', equip: '1×10kg DB', cues: 'Square hips; reach long; control' },
-          { name: 'Band Good Morning', equip: 'Heavy band', cues: 'Band at hips; hinge; squeeze glutes' },
-          { name: 'Glute Bridge', equip: 'Bodyweight', cues: 'Ribs down; full hip extension; pause' }
-        ],
         push: [
-          { name: 'DB Strict Press', equip: '2×10kg DB', cues: 'Ribs down; glutes tight; smooth press' },
-          { name: 'DB Floor Press', equip: '2×10kg DB', cues: 'Elbows ~45°; pause on floor; press fast' },
-          { name: 'Push-Ups', equip: 'Bodyweight', cues: 'Full-body tension; chest to floor; lock out' },
-          { name: 'Band Triceps Pushdown', equip: 'Band', cues: 'Lock elbows; full extension; slow return' }
+          { name: 'DB Push Press', equip: '2× light DBs', cues: 'Dip hips; drive legs; press to full lockout' },
+          { name: 'DB Strict Press', equip: '2× light DBs', cues: 'Ribs down; no leg drive; vertical press to lockout' },
+          { name: 'Push-Ups', equip: 'Bodyweight', cues: 'Full-body tension; chest touches floor; lock out elbows' },
+          { name: 'DB Floor Press', equip: '2× heavy DBs', cues: 'Elbows 45°; pause on floor; explosive press' }
         ],
         pull: [
-          { name: 'Pull-Ups / Chin-Ups', equip: 'Pull-up bar', cues: 'Full hang; ribs down; controlled reps' },
-          { name: 'DB Bent-Over Row', equip: '2×10kg DB', cues: 'Flat back; pull to pockets; pause 1s' },
-          { name: 'Single-Arm DB Row', equip: '1×10kg DB', cues: 'Brace hard; elbow to hip; slow return' },
-          { name: 'Band Face Pull', equip: 'Light band', cues: 'Pull to eyebrows; elbows high; 1s squeeze' }
+          { name: 'Strict Pull-Ups', equip: 'Pull-up bar', cues: 'Dead hang start; pull chest to bar; control descent' },
+          { name: 'Kipping Pull-Ups', equip: 'Pull-up bar', cues: 'Swing from shoulders; chin clears bar; re-kip fast' },
+          { name: 'DB Bent-Over Row', equip: '2× heavy DBs', cues: 'Flat back; pull to hips; 1s squeeze at top' },
+          { name: 'Band Face Pull', equip: 'Light band', cues: 'Elbows high; pull to forehead; external rotation' }
+        ],
+        squat: [
+          { name: 'DB Goblet Squat', equip: '1× heavy DB', cues: 'Elbows inside knees; full depth; heel pressure' },
+          { name: 'DB Thruster', equip: '2× light DBs', cues: 'Squat to overhead in one drive; full lockout' },
+          { name: 'DB Front Squat', equip: '2× light DBs', cues: 'Elbows high; upright torso; below parallel' },
+          { name: 'Air Squat', equip: 'Bodyweight', cues: 'Hip crease below knee; arms forward; stand tall' }
+        ],
+        hinge: [
+          { name: 'DB Deadlift', equip: '2× heavy DBs', cues: 'Neutral spine; push floor away; hips and shoulders rise together' },
+          { name: 'DB Romanian Deadlift', equip: '2× heavy DBs', cues: 'Hips back; soft knee; load the hamstrings' },
+          { name: 'DB Hang Power Clean', equip: '2× light DBs', cues: 'Hinge to hang; triple extension; fast elbows' },
+          { name: 'DB Sumo Deadlift High Pull', equip: '1× heavy DB', cues: 'Wide stance; shrug first; pull high; control down' }
+        ],
+        lunge: [
+          { name: 'DB Front Rack Lunge', equip: '2× light DBs', cues: 'Elbows up; knee tracks toes; upright torso' },
+          { name: 'DB Reverse Lunge', equip: '2× light DBs', cues: 'Step back softly; front heel heavy; tall spine' },
+          { name: 'DB Walking Lunge', equip: '2× light DBs', cues: 'Long stride; knee nearly touches floor; drive through front heel' },
+          { name: 'DB Lateral Lunge', equip: '2× light DBs', cues: 'Sit into hip; straight leg long; chest up' }
         ],
         carry: [
-          { name: 'Farmer Carry March', equip: '2×10kg DB', cues: 'Tall posture; slow march; brace hard' },
-          { name: 'Suitcase Carry March', equip: '1×10kg DB', cues: 'Stay square; avoid side bend; controlled steps' },
-          { name: 'Front Rack Carry March', equip: '2×5kg DB', cues: 'Elbows up; ribs down; smooth steps' },
-          { name: 'Overhead Carry March', equip: '2×5kg DB', cues: 'Lockout stable; slow feet; tight core' }
+          { name: 'DB Farmer Carry', equip: '2× heavy DBs', cues: 'Tall posture; packed shoulders; brace hard' },
+          { name: 'DB Suitcase Carry', equip: '1× heavy DB', cues: 'Resist side bend; stay square; controlled march' },
+          { name: 'DB Front Rack Carry', equip: '2× light DBs', cues: 'Elbows up; ribs down; smooth deliberate steps' },
+          { name: 'DB Overhead Carry', equip: '2× light DBs', cues: 'Arms locked out; ribs down; slow deliberate steps' }
         ]
       };
 
-      const CATEGORY_POOL = ['squat', 'lunge', 'hinge', 'push', 'pull', 'carry'];
+      const CATEGORY_POOL = ['push', 'pull', 'squat', 'hinge', 'lunge', 'carry'];
 
       function seededRandom(seed) {
         const x = Math.sin(seed) * 10000;
@@ -399,8 +399,7 @@
       }
 
       function buildSet(seedBase, usedByCategory) {
-        const order = shuffleWithSeed(CATEGORY_POOL, seedBase);
-        return order.map((category, i) => pickOne(category, seedBase + (i * 17), usedByCategory));
+        return CATEGORY_POOL.map((category, i) => pickOne(category, seedBase + (i * 17), usedByCategory));
       }
 
       function buildWorkout() {
