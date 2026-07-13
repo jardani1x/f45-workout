@@ -244,11 +244,46 @@
     .complete-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 8px; }
     .complete-sub { color: var(--muted); margin-bottom: 18px; }
 
-    .footer-note {
+    .page-footer {
       text-align: center;
+      margin-top: 32px;
+      padding: 20px 0 8px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .footer-desc {
       color: var(--muted);
-      margin-top: 18px;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
+      max-width: 480px;
+      line-height: 1.55;
+    }
+    .footer-link {
+      color: var(--blue);
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-decoration: none;
+      letter-spacing: 0.01em;
+    }
+    .footer-link:hover { text-decoration: underline; }
+
+    .cat-btn {
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--muted);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .cat-btn.active {
+      background: rgba(59,130,246,0.18);
+      border-color: var(--blue);
+      color: var(--blue);
     }
   </style>
 </head>
@@ -278,7 +313,11 @@
     </section>
 
     <main id="workoutRoot"></main>
-    <div class="footer-note">Production build • static single-file app</div>
+
+    <footer class="page-footer">
+      <p class="footer-desc">CrossFit-style interval trainer — 4 sets of exercises, new movements every day. Push, pull, squat, hinge, lunge, carry.</p>
+      <a class="footer-link" href="https://jardani1x.github.io/f45-workout/" target="_blank" rel="noopener">jardani1x.github.io/f45-workout</a>
+    </footer>
   </div>
 
   <div id="settingsOverlay" class="overlay">
@@ -290,6 +329,10 @@
         <label>Long Rest Seconds<br><input id="longRestInput" type="number" min="10" max="600" style="width:100%; margin-top:6px; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--panel-2); color:var(--text);"></label>
         <label><input id="soundToggle" type="checkbox"> Sound cues</label>
         <label><input id="vibrateToggle" type="checkbox"> Vibration cues</label>
+        <div>
+          <div style="margin-bottom:8px; color:var(--muted); font-size:0.88rem; font-weight:600;">Exercise Categories</div>
+          <div id="categoryToggles" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+        </div>
       </div>
       <div class="controls" style="justify-content:flex-end; margin-top:18px;">
         <button id="closeSettingsBtn" class="secondary">Close</button>
@@ -334,7 +377,9 @@
           { name: 'DB Deadlift', equip: '2× heavy DBs', cues: 'Neutral spine; push floor away; hips and shoulders rise together' },
           { name: 'DB Romanian Deadlift', equip: '2× heavy DBs', cues: 'Hips back; soft knee; load the hamstrings' },
           { name: 'DB Hang Power Clean', equip: '2× light DBs', cues: 'Hinge to hang; triple extension; fast elbows' },
-          { name: 'DB Sumo Deadlift High Pull', equip: '1× heavy DB', cues: 'Wide stance; shrug first; pull high; control down' }
+          { name: 'DB Sumo Deadlift High Pull', equip: '1× heavy DB', cues: 'Wide stance; shrug first; pull high; control down' },
+          { name: 'DB Swing', equip: '1× heavy DB', cues: 'Hinge hard; snap hips; float to shoulder height; control descent' },
+          { name: 'DB Snatch', equip: '1× light DB', cues: 'Hinge to hang; explosive hip snap; punch overhead; lockout arm' }
         ],
         lunge: [
           { name: 'DB Front Rack Lunge', equip: '2× light DBs', cues: 'Elbows up; knee tracks toes; upright torso' },
@@ -399,7 +444,8 @@
       }
 
       function buildSet(seedBase, usedByCategory) {
-        return CATEGORY_POOL.map((category, i) => pickOne(category, seedBase + (i * 17), usedByCategory));
+        const active = CATEGORY_POOL.filter(c => prefs.activeCategories.includes(c));
+        return active.map((category, i) => pickOne(category, seedBase + (i * 17), usedByCategory));
       }
 
       function buildWorkout() {
@@ -439,12 +485,14 @@
         nextUpName: document.getElementById('nextUpName'),
         nextUpMeta: document.getElementById('nextUpMeta'),
         workoutRoot: document.getElementById('workoutRoot'),
-        completeOverlay: document.getElementById('completeOverlay')
+        completeOverlay: document.getElementById('completeOverlay'),
+        categoryToggles: document.getElementById('categoryToggles')
       };
 
 
       const audioCtx = window.AudioContext ? new AudioContext() : null;
-      const prefs = JSON.parse(localStorage.getItem('f45Prefs') || '{"sound":true,"vibrate":false,"work":40,"rest":20,"longRest":120}');
+      const prefs = JSON.parse(localStorage.getItem('f45Prefs') || '{"sound":true,"vibrate":false,"work":40,"rest":20,"longRest":120,"activeCategories":["push","pull","squat","hinge","lunge","carry"]}');
+      if (!prefs.activeCategories || !prefs.activeCategories.length) prefs.activeCategories = [...CATEGORY_POOL];
       let WORK_TIME = Number(prefs.work || 40);
       let REST_TIME = Number(prefs.rest || 20);
       let LONG_REST_TIME = Number(prefs.longRest || 120);
@@ -470,6 +518,13 @@
         els.longRestInput.value = LONG_REST_TIME;
         els.soundToggle.checked = !!prefs.sound;
         els.vibrateToggle.checked = !!prefs.vibrate;
+        const active = new Set(prefs.activeCategories);
+        els.categoryToggles.innerHTML = CATEGORY_POOL.map(cat => `
+          <button class="cat-btn${active.has(cat) ? ' active' : ''}" data-cat="${cat}"
+            onclick="this.classList.toggle('active')">
+            ${cat.charAt(0).toUpperCase() + cat.slice(1)}
+          </button>
+        `).join('');
         els.settingsOverlay.classList.add('show');
       }
 
@@ -484,6 +539,8 @@
         prefs.work = WORK_TIME; prefs.rest = REST_TIME; prefs.longRest = LONG_REST_TIME;
         prefs.sound = !!els.soundToggle.checked;
         prefs.vibrate = !!els.vibrateToggle.checked;
+        const selected = [...els.categoryToggles.querySelectorAll('.cat-btn.active')].map(b => b.dataset.cat);
+        prefs.activeCategories = selected.length >= 1 ? selected : [...CATEGORY_POOL];
         localStorage.setItem('f45Prefs', JSON.stringify(prefs));
         resetWorkout();
         closeSettings();
@@ -504,7 +561,7 @@
           <section class="card section" id="set-${setIdx}">
             <div class="section-head">
               <div class="section-title">${workout.names[setIdx]}</div>
-              <div class="section-badge">${workout.longRestAfterSet[setIdx] ? 'Long rest after set' : '6 exercises'}</div>
+              <div class="section-badge">${workout.longRestAfterSet[setIdx] ? 'Long rest after set' : `${set.length} exercise${set.length !== 1 ? 's' : ''}`}</div>
             </div>
             <div class="exercise-list">
               ${set.map((ex, idx) => `
@@ -524,9 +581,10 @@
 
       function getDisplayTarget() {
         if (state.isWork) return { set: state.currentSet, exercise: state.currentExercise };
+        const perSet = workout.sets[0].length;
         let nextSet = state.currentSet;
         let nextExercise = state.currentExercise + 1;
-        if (nextExercise >= 6) {
+        if (nextExercise >= perSet) {
           nextExercise = 0;
           nextSet += 1;
         }
@@ -570,7 +628,7 @@
         els.phase.textContent = label;
         els.phase.className = `phase ${state.isWork ? 'work' : 'rest'}`;
         if (ex) {
-          els.status.textContent = `Round ${target.set + 1}/4 • Exercise ${target.exercise + 1}/6 • ${ex.name}`;
+          els.status.textContent = `Round ${target.set + 1}/4 • Exercise ${target.exercise + 1}/${workout.sets[0].length} • ${ex.name}`;
         } else {
           els.status.textContent = 'Workout complete';
         }
@@ -580,7 +638,7 @@
         const mins = String(Math.floor(state.timeLeft / 60)).padStart(2, '0');
         const secs = String(state.timeLeft % 60).padStart(2, '0');
         els.timer.textContent = `${mins}:${secs}`;
-        const total = state.isWork ? WORK_TIME : (workout.longRestAfterSet[state.currentSet] && state.currentExercise === 5 ? LONG_REST_TIME : REST_TIME);
+        const total = state.isWork ? WORK_TIME : (workout.longRestAfterSet[state.currentSet] && state.currentExercise === workout.sets[0].length - 1 ? LONG_REST_TIME : REST_TIME);
         const progress = ((total - state.timeLeft) / total) * 100;
         els.progress.style.width = `${Math.max(0, Math.min(100, progress))}%`;
         els.progress.className = `progress-bar${state.isWork ? '' : ' rest'}`;
@@ -608,8 +666,9 @@
       }
 
       function advancePhase() {
+        const lastIdx = workout.sets[0].length - 1;
         if (state.isWork) {
-          const lastExercise = state.currentExercise === 5;
+          const lastExercise = state.currentExercise === lastIdx;
           const lastSet = state.currentSet === 3;
           if (lastExercise && lastSet) {
             completeWorkout();
@@ -619,7 +678,7 @@
           state.timeLeft = lastExercise && workout.longRestAfterSet[state.currentSet] ? LONG_REST_TIME : REST_TIME;
         } else {
           state.isWork = true;
-          if (state.currentExercise < 5) {
+          if (state.currentExercise < lastIdx) {
             state.currentExercise += 1;
           } else {
             state.currentExercise = 0;
@@ -645,7 +704,7 @@
 
 
       function goNext() {
-        if (state.currentSet === 3 && state.currentExercise === 5 && state.isWork) {
+        if (state.currentSet === 3 && state.currentExercise === workout.sets[0].length - 1 && state.isWork) {
           completeWorkout();
           return;
         }
@@ -663,7 +722,7 @@
           state.currentExercise -= 1;
         } else if (state.currentSet > 0) {
           state.currentSet -= 1;
-          state.currentExercise = 5;
+          state.currentExercise = workout.sets[0].length - 1;
         } else {
           state.timeLeft = WORK_TIME;
           renderAll();
